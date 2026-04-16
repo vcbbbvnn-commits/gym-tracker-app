@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gym Track</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Gym Track</p>
+        <h1>Train with structure. Watch your numbers move.</h1>
+        <p class="hero-text">
+          Log workouts, record sets, and keep an eye on your total volume without juggling notes apps or spreadsheets.
+        </p>
+      </div>
+      <div class="hero-card">
+        <div class="status-row">
+          <span class="status-dot"></span>
+          <span id="auth-status">Signed out</span>
+        </div>
+        <h2 id="hero-user">Ready for your next session</h2>
+        <p id="hero-subtitle">Create an account or log in to start tracking your lifts.</p>
+        <button id="logout-button" class="ghost-button hidden" type="button">Log out</button>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="panel auth-panel">
+        <div class="panel-heading">
+          <p class="section-kicker">Account</p>
+          <h2>Access your tracker</h2>
+        </div>
+
+        <div class="auth-grid">
+          <form id="signup-form" class="stack-form">
+            <h3>Create account</h3>
+            <label>
+              <span>Full name</span>
+              <input name="full_name" type="text" placeholder="Jamie Carter" required>
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" placeholder="you@example.com" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" placeholder="Minimum 8 characters" required>
+            </label>
+            <button type="submit">Sign up</button>
+          </form>
+
+          <form id="login-form" class="stack-form muted-form">
+            <h3>Log in</h3>
+            <label>
+              <span>Email</span>
+              <input name="email" type="email" placeholder="you@example.com" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input name="password" type="password" placeholder="Your password" required>
+            </label>
+            <button type="submit">Log in</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="metrics-grid" id="metrics-grid">
+        <article class="metric-card">
+          <span>Total workouts</span>
+          <strong id="metric-workouts">0</strong>
+        </article>
+        <article class="metric-card">
+          <span>Total exercises</span>
+          <strong id="metric-exercises">0</strong>
+        </article>
+        <article class="metric-card">
+          <span>Total sets</span>
+          <strong id="metric-sets">0</strong>
+        </article>
+        <article class="metric-card accent">
+          <span>Total volume</span>
+          <strong id="metric-volume">0 kg</strong>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <div class="panel-heading">
+            <p class="section-kicker">Workouts</p>
+            <h2>Build your session log</h2>
+          </div>
+
+          <form id="workout-form" class="inline-form">
+            <input name="name" type="text" placeholder="Push Day, Leg Day, Upper Strength..." required>
+            <input name="description" type="text" placeholder="Optional notes or focus">
+            <button type="submit">Add workout</button>
+          </form>
+
+          <div id="workouts-empty" class="empty-state">
+            Sign in to start creating workouts and logging sets.
+          </div>
+          <div id="workouts-list" class="workouts-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <p class="section-kicker">Progress</p>
+            <h2>Exercise leaderboard</h2>
+          </div>
+
+          <div id="progress-empty" class="empty-state">
+            Your best lifts and total exercise volume will show up here.
+          </div>
+          <div id="progress-table" class="progress-table"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
