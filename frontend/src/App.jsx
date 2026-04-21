@@ -3,9 +3,12 @@ import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
+import HomePage from "./pages/HomePage";
+import SessionsPage from "./pages/SessionsPage";
 import ProgressPage from "./pages/ProgressPage";
+import ProgressDetailPage from "./pages/ProgressDetailPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
+import TemplatesPage from "./pages/TemplatesPage";
 
 function App() {
   const { token } = useAuth();
@@ -23,9 +26,12 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/sessions" element={<SessionsPage />} />
+        <Route path="/templates" element={<TemplatesPage />} />
         <Route path="/workouts/:workoutId" element={<WorkoutSessionPage />} />
         <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/progress/:exerciseName" element={<ProgressDetailPage />} />
       </Route>
       <Route path="*" element={<Navigate to={token ? "/" : "/auth"} replace />} />
     </Routes>

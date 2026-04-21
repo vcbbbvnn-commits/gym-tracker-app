@@ -113,6 +113,13 @@ function DashboardPage() {
           subtitle="Open a session to add exercises and log sets, or remove routines you no longer need."
         />
 
+        {/* Callout to use templates */}
+        <div className="mt-6 rounded-3xl border border-cyanGlow/30 bg-cyanGlow/10 px-6 py-4">
+          <p className="text-sm text-slate-200">
+            Want to get started quickly? <Link to="/templates" className="font-semibold text-cyanGlow hover:underline">Browse pre-built workout templates</Link>
+          </p>
+        </div>
+
         <div className="mt-8 space-y-4">
           {loading ? <p className="text-sm text-slate-300">Loading workouts...</p> : null}
 

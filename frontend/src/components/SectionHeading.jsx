@@ -1,9 +1,20 @@
 function SectionHeading({ eyebrow, title, subtitle }) {
   return (
     <div className="space-y-2">
-      <p className="font-display text-xs uppercase tracking-[0.35em] text-cyanGlow">{eyebrow}</p>
-      <h2 className="font-display text-2xl text-sand">{title}</h2>
-      {subtitle ? <p className="max-w-2xl text-sm text-slate-300">{subtitle}</p> : null}
+      {eyebrow && (
+        <span className="section-badge inline-flex">{eyebrow}</span>
+      )}
+      {title && (
+        <h2
+          className="text-2xl font-bold text-white"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        >
+          {title}
+        </h2>
+      )}
+      {subtitle && (
+        <p className="text-sm leading-relaxed text-gray-500">{subtitle}</p>
+      )}
     </div>
   );
 }

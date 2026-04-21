@@ -10,6 +10,9 @@ function WorkoutSessionPage() {
   const [setForms, setSetForms] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isActive, setIsActive] = useState(false);
 
   const loadWorkout = async () => {
     setLoading(true);
@@ -26,6 +29,36 @@ function WorkoutSessionPage() {
   useEffect(() => {
     loadWorkout();
   }, [workoutId]);
+
+  // Timer effect for elapsed time
+  useEffect(() => {
+    let interval;
+    if (isActive && sessionStartTime) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - sessionStartTime) / 1000);
+        setElapsedTime(elapsed);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, sessionStartTime]);
+
+  const handleStartWorkout = () => {
+    const now = Date.now();
+    setSessionStartTime(now);
+    setIsActive(true);
+  };
+
+  const handleEndWorkout = () => {
+    setIsActive(false);
+  };
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
   const handleAddExercise = async (event) => {
     event.preventDefault();
@@ -94,8 +127,8 @@ function WorkoutSessionPage() {
     return (
       <div className="panel p-8">
         <p className="text-slate-200">{error || "Workout not found."}</p>
-        <Link to="/" className="mt-4 inline-flex text-cyanGlow">
-          Back to dashboard
+        <Link to="/sessions" className="mt-4 inline-flex text-cyanGlow">
+          Back to sessions
         </Link>
       </div>
     );
@@ -105,14 +138,48 @@ function WorkoutSessionPage() {
     <div className="space-y-6">
       <section className="panel animate-fade-up p-6 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <SectionHeading
-            eyebrow="Workout Session"
-            title={workout.name}
-            subtitle={workout.description || "Log every set so you can compare effort over time."}
-          />
-          <Link to="/" className="text-sm font-semibold text-cyanGlow">
-            Back to dashboard
+          <div className="flex-1">
+            <SectionHeading
+              eyebrow="Workout Session"
+              title={workout.name}
+              subtitle={workout.description || "Log every set so you can compare effort over time."}
+            />
+          </div>
+          <Link to="/sessions" className="text-sm font-semibold text-cyanGlow hover:text-cyanGlow/80">
+            Back to sessions
           </Link>
+        </div>
+
+        {/* Session Timer */}
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-cyanGlow/30 bg-cyanGlow/5 p-6">
+            <p className="text-sm text-slate-400">Session Time</p>
+            <p className="mt-2 font-display text-4xl text-cyanGlow font-mono">
+              {formatTime(elapsedTime)}
+            </p>
+            {sessionStartTime && (
+              <p className="mt-2 text-xs text-slate-400">
+                Started: {new Date(sessionStartTime).toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-3">
+            {!isActive ? (
+              <button
+                onClick={handleStartWorkout}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-cyanGlow to-cyan-400 px-6 py-3 font-display font-semibold text-slate-950 transition hover:shadow-lg hover:shadow-cyanGlow/50 transform hover:scale-105"
+              >
+                ▶ Start Workout
+              </button>
+            ) : (
+              <button
+                onClick={handleEndWorkout}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-coral to-red-400 px-6 py-3 font-display font-semibold text-white transition hover:shadow-lg hover:shadow-coral/50 transform hover:scale-105"
+              >
+                ⏹ End Workout
+              </button>
+            )}
+          </div>
         </div>
 
         <form className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr_auto]" onSubmit={handleAddExercise}>

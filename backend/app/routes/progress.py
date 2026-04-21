@@ -5,7 +5,7 @@ from app.core.deps import get_current_user
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.progress import ExerciseProgressItem, ProgressSummary
-from app.services.progress_service import get_exercise_progress, get_progress_summary
+from app.services.progress_service import get_exercise_progress, get_progress_summary, get_weekly_comparison
 from app.services.workout_service import list_workouts
 from app.schemas.workout import WorkoutRead
 
@@ -23,6 +23,16 @@ def exercise_progress(
     current_user: User = Depends(get_current_user),
 ) -> list[ExerciseProgressItem]:
     return get_exercise_progress(db, current_user)
+
+
+@router.get("/weekly/{exercise_name}")
+def weekly_comparison(
+    exercise_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get week-by-week comparison for a specific exercise."""
+    return get_weekly_comparison(db, current_user, exercise_name)
 
 
 @router.get("/history", response_model=list[WorkoutRead])
