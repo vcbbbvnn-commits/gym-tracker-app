@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const apiUrl = import.meta.env.VITE_API_URL || "https://gym-tracker-app-lue1.onrender.com/api";
+// Ensure it always ends with /api if the user forgot it in Vercel settings
+const safeBaseUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  baseURL: safeBaseUrl,
 });
 
 api.interceptors.request.use((config) => {
