@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import List
+from pydantic import field_validator, Field, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
 
 
 class Settings(BaseSettings):
@@ -11,10 +12,18 @@ class Settings(BaseSettings):
 
     # Supports comma-separated list of allowed origins via env var
     # e.g. FRONTEND_URL=https://gym-tracker.vercel.app,http://localhost:5173
-    @property
-    def frontend_url(self) -> list[str]:
-        raw = os.getenv("FRONTEND_URL", "http://localhost:5173")
-        return [u.strip() for u in raw.split(",") if u.strip()]
+    frontend_url: str = "http://localhost:5173"
+
+    @field_validator("frontend_url", mode="before")
+    @classmethod
+    def parse_frontend_url(cls, v):
+        if isinstance(v, str):
+            return v
+        return v
+    
+    def get_frontend_urls(self) -> List[str]:
+        """Parse frontend_url string into a list of URLs."""
+        return [u.strip() for u in self.frontend_url.split(",") if u.strip()]
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent.parent / ".env",
