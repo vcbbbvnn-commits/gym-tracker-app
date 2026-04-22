@@ -22,8 +22,11 @@ class Settings(BaseSettings):
         return v
     
     def get_frontend_urls(self) -> List[str]:
-        """Parse frontend_url string into a list of URLs."""
-        return [u.strip() for u in self.frontend_url.split(",") if u.strip()]
+        """Parse frontend_url string into a list of URLs and ensure Vercel is allowed."""
+        urls = [u.strip() for u in self.frontend_url.split(",") if u.strip()]
+        if "https://gym-tracker-app-nine-chi.vercel.app" not in urls:
+            urls.append("https://gym-tracker-app-nine-chi.vercel.app")
+        return urls
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent.parent / ".env",
