@@ -20,24 +20,49 @@ const FOCUS_CONFIG = {
 
 function getDayFocus(exercises) {
   if (!exercises || exercises.length === 0) return "REST";
-  const names = exercises.map(e => e.name.toLowerCase()).join(" ");
   
-  // Priority 1: Specific Arms
-  if (names.includes("bicep") || names.includes("curl") || names.includes("hammer")) return "BICEPS";
-  if (names.includes("tricep") || names.includes("skull") || names.includes("pushdown") || names.includes("dip") || names.includes("close-grip")) return "TRICEPS";
-  
-  // Priority 2: Major Groups
-  // Check for 'back' as a distinct word or specific back terms
-  const words = names.split(/\s+/);
-  if (words.includes("back") || words.includes("row") || words.includes("pull-up") || words.includes("pulldown") || names.includes("lat pulldown")) return "BACK";
-  
-  if (names.includes("shoulder") || names.includes("lateral") || names.includes("shrug") || names.includes("delt") || names.includes("overhead")) return "SHOULDERS";
-  if (names.includes("leg") || names.includes("squat") || names.includes("calf") || names.includes("lunge") || names.includes("romanian")) return "LEGS";
-  if (names.includes("chest") || names.includes("bench") || names.includes("pec") || names.includes("incline")) return "CHEST";
-  
-  if (names.includes("push")) return "PUSH";
-  if (names.includes("pull")) return "PULL";
-  return "TRAINING";
+  const scores = {
+    CHEST: 0, BACK: 0, LEGS: 0, SHOULDERS: 0, 
+    BICEPS: 0, TRICEPS: 0, PUSH: 0, PULL: 0
+  };
+
+  exercises.forEach(ex => {
+    const name = ex.name.toLowerCase();
+    // LEGS
+    if (name.includes("squat") || name.includes("leg press") || name.includes("lunge")) scores.LEGS += 3;
+    else if (name.includes("leg extension") || name.includes("leg curl") || name.includes("calf") || name.includes("romanian deadlift")) scores.LEGS += 1;
+    
+    // CHEST
+    if (name.includes("bench press") || name.includes("chest press")) scores.CHEST += 3;
+    else if (name.includes("fly") || name.includes("pec deck") || name.includes("crossover") || name.includes("dip")) scores.CHEST += 1;
+    
+    // BACK
+    if (name.includes("deadlift") || name.includes("row") || name.includes("pull-up") || name.includes("pulldown") || name.includes("t-bar")) scores.BACK += 3;
+    else if (name.includes("face pull") || name.includes("shrug") || (name.includes("lat") && !name.includes("lateral"))) scores.BACK += 1;
+    
+    // SHOULDERS
+    if (name.includes("overhead press") || name.includes("shoulder press") || name.includes("military press")) scores.SHOULDERS += 3;
+    else if (name.includes("lateral raise") || name.includes("front raise") || name.includes("rear delt")) scores.SHOULDERS += 1;
+    
+    // ARMS
+    if (name.includes("bicep") || (name.includes("curl") && !name.includes("leg"))) scores.BICEPS += 1;
+    if (name.includes("tricep") || name.includes("skull crusher") || (name.includes("pushdown") && !name.includes("leg"))) scores.TRICEPS += 1;
+  });
+
+  const topFocus = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+  if (scores[topFocus] === 0) return "TRAINING";
+
+  const hasChest = scores.CHEST > 0;
+  const hasBack = scores.BACK > 0;
+  const hasShoulders = scores.SHOULDERS > 0;
+  const hasLegs = scores.LEGS > 0;
+
+  if (hasChest && hasShoulders && !hasBack) return "PUSH";
+  if (hasBack && scores.BICEPS > 0 && !hasChest) return "PULL";
+  if (hasChest && hasBack) return "UPPER";
+  if (hasLegs && scores.LEGS >= scores.CHEST && scores.LEGS >= scores.BACK) return "LEGS";
+
+  return topFocus;
 }
 
 function DayCard({ dayIndex, exercises, templateId, onStart, starting }) {
