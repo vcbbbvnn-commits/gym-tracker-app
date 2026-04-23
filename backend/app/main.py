@@ -15,33 +15,64 @@ def seed_templates():
     """Create preset workout templates."""
     db = SessionLocal()
     try:
-        # Check if templates already exist
         from app.models.template import WorkoutTemplate
-        if db.query(WorkoutTemplate).filter(WorkoutTemplate.is_preset).count() > 0:
-            return
+        # Remove existing presets so the new updated lists take effect
+        db.query(WorkoutTemplate).filter(WorkoutTemplate.is_preset == True).delete()
+        db.commit()
 
         # Push/Pull/Legs Split
         ppl_template = WorkoutTemplateCreate(
-            name="Push/Pull/Legs Split",
-            description="Classic 3-day split focusing on push (chest, shoulders, triceps), pull (back, biceps), and legs",
+            name="Push/Pull/Legs Split (6-Day)",
+            description="Classic 6-day split. Day 1/4: Push (Chest/Shoulders/Triceps). Day 2/5: Pull (Back/Biceps). Day 3/6: Legs.",
             category="Push/Pull/Legs",
             duration_days=6,
             exercises=[
-                # Push Day
-                TemplateExerciseCreate(name="Bench Press", recommended_sets=4, recommended_reps="6-8", day_number=1, order=1),
+                # Day 1: Push
+                TemplateExerciseCreate(name="Barbell Bench Press", recommended_sets=4, recommended_reps="5-8", day_number=1, order=1),
                 TemplateExerciseCreate(name="Incline Dumbbell Press", recommended_sets=3, recommended_reps="8-10", day_number=1, order=2),
-                TemplateExerciseCreate(name="Lateral Raises", recommended_sets=3, recommended_reps="10-15", day_number=1, order=3),
-                TemplateExerciseCreate(name="Tricep Dips", recommended_sets=3, recommended_reps="8-12", day_number=1, order=4),
-                # Pull Day
-                TemplateExerciseCreate(name="Deadlifts", recommended_sets=4, recommended_reps="5-6", day_number=3, order=1),
-                TemplateExerciseCreate(name="Barbell Rows", recommended_sets=4, recommended_reps="6-8", day_number=3, order=2),
-                TemplateExerciseCreate(name="Weighted Pull-ups", recommended_sets=3, recommended_reps="6-10", day_number=3, order=3),
-                TemplateExerciseCreate(name="Barbell Curls", recommended_sets=3, recommended_reps="8-10", day_number=3, order=4),
-                # Legs Day
-                TemplateExerciseCreate(name="Squats", recommended_sets=4, recommended_reps="6-8", day_number=5, order=1),
-                TemplateExerciseCreate(name="Romanian Deadlifts", recommended_sets=3, recommended_reps="8-10", day_number=5, order=2),
-                TemplateExerciseCreate(name="Leg Press", recommended_sets=3, recommended_reps="8-12", day_number=5, order=3),
-                TemplateExerciseCreate(name="Leg Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=4),
+                TemplateExerciseCreate(name="Overhead Press", recommended_sets=3, recommended_reps="8-10", day_number=1, order=3),
+                TemplateExerciseCreate(name="Lateral Raises", recommended_sets=4, recommended_reps="12-15", day_number=1, order=4),
+                TemplateExerciseCreate(name="Tricep Pushdowns", recommended_sets=3, recommended_reps="10-12", day_number=1, order=5),
+                TemplateExerciseCreate(name="Overhead Tricep Extensions", recommended_sets=3, recommended_reps="10-12", day_number=1, order=6),
+                
+                # Day 2: Pull
+                TemplateExerciseCreate(name="Deadlifts", recommended_sets=3, recommended_reps="5-8", day_number=2, order=1),
+                TemplateExerciseCreate(name="Lat Pulldowns", recommended_sets=3, recommended_reps="8-12", day_number=2, order=2),
+                TemplateExerciseCreate(name="Barbell Rows", recommended_sets=3, recommended_reps="8-10", day_number=2, order=3),
+                TemplateExerciseCreate(name="Face Pulls", recommended_sets=3, recommended_reps="12-15", day_number=2, order=4),
+                TemplateExerciseCreate(name="Barbell Bicep Curls", recommended_sets=3, recommended_reps="10-12", day_number=2, order=5),
+                TemplateExerciseCreate(name="Hammer Curls", recommended_sets=3, recommended_reps="10-12", day_number=2, order=6),
+
+                # Day 3: Legs
+                TemplateExerciseCreate(name="Barbell Squats", recommended_sets=4, recommended_reps="5-8", day_number=3, order=1),
+                TemplateExerciseCreate(name="Leg Press", recommended_sets=3, recommended_reps="10-12", day_number=3, order=2),
+                TemplateExerciseCreate(name="Leg Extensions", recommended_sets=3, recommended_reps="12-15", day_number=3, order=3),
+                TemplateExerciseCreate(name="Romanian Deadlifts", recommended_sets=3, recommended_reps="8-10", day_number=3, order=4),
+                TemplateExerciseCreate(name="Lying Leg Curls", recommended_sets=3, recommended_reps="12-15", day_number=3, order=5),
+                TemplateExerciseCreate(name="Calf Raises", recommended_sets=4, recommended_reps="15-20", day_number=3, order=6),
+
+                # Day 4: Push B
+                TemplateExerciseCreate(name="Dumbbell Bench Press", recommended_sets=4, recommended_reps="8-10", day_number=4, order=1),
+                TemplateExerciseCreate(name="Incline Barbell Press", recommended_sets=3, recommended_reps="8-10", day_number=4, order=2),
+                TemplateExerciseCreate(name="Seated Dumbbell Press", recommended_sets=3, recommended_reps="8-10", day_number=4, order=3),
+                TemplateExerciseCreate(name="Cable Lateral Raises", recommended_sets=4, recommended_reps="12-15", day_number=4, order=4),
+                TemplateExerciseCreate(name="Skull Crushers", recommended_sets=3, recommended_reps="10-12", day_number=4, order=5),
+                TemplateExerciseCreate(name="Tricep Dips", recommended_sets=3, recommended_reps="8-12", day_number=4, order=6),
+
+                # Day 5: Pull B
+                TemplateExerciseCreate(name="Pull-ups", recommended_sets=3, recommended_reps="8-12", day_number=5, order=1),
+                TemplateExerciseCreate(name="Seated Cable Rows", recommended_sets=3, recommended_reps="10-12", day_number=5, order=2),
+                TemplateExerciseCreate(name="Single Arm Dumbbell Rows", recommended_sets=3, recommended_reps="10-12", day_number=5, order=3),
+                TemplateExerciseCreate(name="Rear Delt Flyes", recommended_sets=3, recommended_reps="12-15", day_number=5, order=4),
+                TemplateExerciseCreate(name="Preacher Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=5),
+                TemplateExerciseCreate(name="Reverse Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=6),
+
+                # Day 6: Legs B
+                TemplateExerciseCreate(name="Front Squats", recommended_sets=4, recommended_reps="8-10", day_number=6, order=1),
+                TemplateExerciseCreate(name="Hack Squats", recommended_sets=3, recommended_reps="10-12", day_number=6, order=2),
+                TemplateExerciseCreate(name="Walking Lunges", recommended_sets=3, recommended_reps="10-12", day_number=6, order=3),
+                TemplateExerciseCreate(name="Seated Leg Curls", recommended_sets=3, recommended_reps="12-15", day_number=6, order=4),
+                TemplateExerciseCreate(name="Standing Calf Raises", recommended_sets=4, recommended_reps="15-20", day_number=6, order=5),
             ],
         )
         create_workout_template(db, ppl_template)
@@ -49,57 +80,90 @@ def seed_templates():
         # Bro Split
         bro_split = WorkoutTemplateCreate(
             name="Bro Split (5-Day)",
-            description="Classic bodybuilding split with one muscle group per day",
+            description="Day 1: Chest, Day 2: Back, Day 3: Shoulders, Day 4: Legs, Day 5: Arms. Focuses entirely on one muscle group per day.",
             category="Bro Split",
             duration_days=5,
             exercises=[
-                # Chest
-                TemplateExerciseCreate(name="Barbell Bench Press", recommended_sets=4, recommended_reps="8-10", day_number=1, order=1),
-                TemplateExerciseCreate(name="Incline Dumbbell Press", recommended_sets=3, recommended_reps="8-10", day_number=1, order=2),
-                TemplateExerciseCreate(name="Machine Flyes", recommended_sets=3, recommended_reps="10-12", day_number=1, order=3),
-                # Back
-                TemplateExerciseCreate(name="Barbell Rows", recommended_sets=4, recommended_reps="8-10", day_number=2, order=1),
-                TemplateExerciseCreate(name="Lat Pulldowns", recommended_sets=3, recommended_reps="8-10", day_number=2, order=2),
-                TemplateExerciseCreate(name="Seated Rows", recommended_sets=3, recommended_reps="10-12", day_number=2, order=3),
-                # Shoulders
-                TemplateExerciseCreate(name="Overhead Press", recommended_sets=4, recommended_reps="8-10", day_number=3, order=1),
-                TemplateExerciseCreate(name="Lateral Raises", recommended_sets=3, recommended_reps="10-15", day_number=3, order=2),
-                TemplateExerciseCreate(name="Rear Delt Flyes", recommended_sets=3, recommended_reps="12-15", day_number=3, order=3),
-                # Arms
-                TemplateExerciseCreate(name="Barbell Curls", recommended_sets=3, recommended_reps="8-10", day_number=4, order=1),
-                TemplateExerciseCreate(name="Skull Crushers", recommended_sets=3, recommended_reps="8-10", day_number=4, order=2),
-                TemplateExerciseCreate(name="Preacher Curls", recommended_sets=3, recommended_reps="10-12", day_number=4, order=3),
-                # Legs
-                TemplateExerciseCreate(name="Squats", recommended_sets=4, recommended_reps="8-10", day_number=5, order=1),
-                TemplateExerciseCreate(name="Leg Press", recommended_sets=3, recommended_reps="8-10", day_number=5, order=2),
-                TemplateExerciseCreate(name="Leg Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=3),
+                # Day 1: Chest
+                TemplateExerciseCreate(name="Flat Barbell Bench Press", recommended_sets=4, recommended_reps="6-8", day_number=1, order=1),
+                TemplateExerciseCreate(name="Incline Dumbbell Press", recommended_sets=4, recommended_reps="8-10", day_number=1, order=2),
+                TemplateExerciseCreate(name="Decline Barbell Bench Press", recommended_sets=3, recommended_reps="8-12", day_number=1, order=3),
+                TemplateExerciseCreate(name="Pec Deck Flyes", recommended_sets=3, recommended_reps="10-15", day_number=1, order=4),
+                TemplateExerciseCreate(name="Cable Crossovers", recommended_sets=3, recommended_reps="12-15", day_number=1, order=5),
+                
+                # Day 2: Back
+                TemplateExerciseCreate(name="Deadlifts", recommended_sets=4, recommended_reps="5-8", day_number=2, order=1),
+                TemplateExerciseCreate(name="Pull-ups / Lat Pulldowns", recommended_sets=4, recommended_reps="8-12", day_number=2, order=2),
+                TemplateExerciseCreate(name="Bent Over Barbell Rows", recommended_sets=3, recommended_reps="8-10", day_number=2, order=3),
+                TemplateExerciseCreate(name="Seated Cable Rows", recommended_sets=3, recommended_reps="10-12", day_number=2, order=4),
+                TemplateExerciseCreate(name="Single Arm Dumbbell Rows", recommended_sets=3, recommended_reps="8-12", day_number=2, order=5),
+                TemplateExerciseCreate(name="Straight Arm Pulldowns", recommended_sets=3, recommended_reps="12-15", day_number=2, order=6),
+
+                # Day 3: Shoulders
+                TemplateExerciseCreate(name="Seated Dumbbell Press", recommended_sets=4, recommended_reps="8-10", day_number=3, order=1),
+                TemplateExerciseCreate(name="Overhead Barbell Press", recommended_sets=3, recommended_reps="8-10", day_number=3, order=2),
+                TemplateExerciseCreate(name="Dumbbell Lateral Raises", recommended_sets=4, recommended_reps="12-15", day_number=3, order=3),
+                TemplateExerciseCreate(name="Cable Front Raises", recommended_sets=3, recommended_reps="10-12", day_number=3, order=4),
+                TemplateExerciseCreate(name="Reverse Pec Deck (Rear Delts)", recommended_sets=3, recommended_reps="12-15", day_number=3, order=5),
+                TemplateExerciseCreate(name="Dumbbell Shrugs", recommended_sets=4, recommended_reps="10-15", day_number=3, order=6),
+
+                # Day 4: Legs
+                TemplateExerciseCreate(name="Barbell Squats", recommended_sets=4, recommended_reps="6-8", day_number=4, order=1),
+                TemplateExerciseCreate(name="Leg Press", recommended_sets=4, recommended_reps="10-12", day_number=4, order=2),
+                TemplateExerciseCreate(name="Romanian Deadlifts", recommended_sets=3, recommended_reps="8-10", day_number=4, order=3),
+                TemplateExerciseCreate(name="Leg Extensions", recommended_sets=3, recommended_reps="12-15", day_number=4, order=4),
+                TemplateExerciseCreate(name="Leg Curls", recommended_sets=3, recommended_reps="12-15", day_number=4, order=5),
+                TemplateExerciseCreate(name="Standing Calf Raises", recommended_sets=4, recommended_reps="15-20", day_number=4, order=6),
+
+                # Day 5: Arms
+                TemplateExerciseCreate(name="Barbell Bicep Curls", recommended_sets=4, recommended_reps="8-10", day_number=5, order=1),
+                TemplateExerciseCreate(name="Tricep Pushdowns", recommended_sets=4, recommended_reps="10-12", day_number=5, order=2),
+                TemplateExerciseCreate(name="Hammer Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=3),
+                TemplateExerciseCreate(name="Skull Crushers", recommended_sets=3, recommended_reps="8-10", day_number=5, order=4),
+                TemplateExerciseCreate(name="Preacher Curls", recommended_sets=3, recommended_reps="10-12", day_number=5, order=5),
+                TemplateExerciseCreate(name="Overhead Tricep Extensions", recommended_sets=3, recommended_reps="10-12", day_number=5, order=6),
             ],
         )
         create_workout_template(db, bro_split)
 
         # Upper/Lower Split
         ul_split = WorkoutTemplateCreate(
-            name="Upper/Lower Split",
-            description="4-day split alternating between upper and lower body workouts",
+            name="Upper/Lower Split (4-Day)",
+            description="Day 1: Upper A, Day 2: Lower A, Day 3: Upper B, Day 4: Lower B. Excellent for building strength and size.",
             category="Upper/Lower",
             duration_days=4,
             exercises=[
-                # Upper A
-                TemplateExerciseCreate(name="Barbell Bench Press", recommended_sets=4, recommended_reps="6-8", day_number=1, order=1),
+                # Day 1: Upper A
+                TemplateExerciseCreate(name="Flat Barbell Bench Press", recommended_sets=4, recommended_reps="5-8", day_number=1, order=1),
                 TemplateExerciseCreate(name="Barbell Rows", recommended_sets=4, recommended_reps="6-8", day_number=1, order=2),
                 TemplateExerciseCreate(name="Overhead Press", recommended_sets=3, recommended_reps="8-10", day_number=1, order=3),
-                # Lower A
-                TemplateExerciseCreate(name="Squats", recommended_sets=4, recommended_reps="6-8", day_number=2, order=1),
+                TemplateExerciseCreate(name="Lat Pulldowns", recommended_sets=3, recommended_reps="8-12", day_number=1, order=4),
+                TemplateExerciseCreate(name="Lateral Raises", recommended_sets=3, recommended_reps="12-15", day_number=1, order=5),
+                TemplateExerciseCreate(name="Tricep Pushdowns", recommended_sets=3, recommended_reps="10-12", day_number=1, order=6),
+                TemplateExerciseCreate(name="Bicep Curls", recommended_sets=3, recommended_reps="10-12", day_number=1, order=7),
+
+                # Day 2: Lower A
+                TemplateExerciseCreate(name="Barbell Squats", recommended_sets=4, recommended_reps="5-8", day_number=2, order=1),
                 TemplateExerciseCreate(name="Romanian Deadlifts", recommended_sets=3, recommended_reps="8-10", day_number=2, order=2),
-                TemplateExerciseCreate(name="Leg Press", recommended_sets=3, recommended_reps="8-10", day_number=2, order=3),
-                # Upper B
+                TemplateExerciseCreate(name="Leg Press", recommended_sets=3, recommended_reps="10-12", day_number=2, order=3),
+                TemplateExerciseCreate(name="Leg Curls", recommended_sets=3, recommended_reps="12-15", day_number=2, order=4),
+                TemplateExerciseCreate(name="Calf Raises", recommended_sets=4, recommended_reps="15-20", day_number=2, order=5),
+
+                # Day 3: Upper B
                 TemplateExerciseCreate(name="Incline Dumbbell Press", recommended_sets=3, recommended_reps="8-10", day_number=3, order=1),
-                TemplateExerciseCreate(name="Weighted Pull-ups", recommended_sets=3, recommended_reps="6-10", day_number=3, order=2),
-                TemplateExerciseCreate(name="Lateral Raises", recommended_sets=3, recommended_reps="10-15", day_number=3, order=3),
-                # Lower B
+                TemplateExerciseCreate(name="Pull-ups", recommended_sets=3, recommended_reps="8-12", day_number=3, order=2),
+                TemplateExerciseCreate(name="Seated Dumbbell Press", recommended_sets=3, recommended_reps="8-10", day_number=3, order=3),
+                TemplateExerciseCreate(name="Seated Cable Rows", recommended_sets=3, recommended_reps="10-12", day_number=3, order=4),
+                TemplateExerciseCreate(name="Face Pulls", recommended_sets=3, recommended_reps="12-15", day_number=3, order=5),
+                TemplateExerciseCreate(name="Overhead Tricep Extensions", recommended_sets=3, recommended_reps="10-12", day_number=3, order=6),
+                TemplateExerciseCreate(name="Hammer Curls", recommended_sets=3, recommended_reps="10-12", day_number=3, order=7),
+
+                # Day 4: Lower B
                 TemplateExerciseCreate(name="Deadlifts", recommended_sets=4, recommended_reps="5-6", day_number=4, order=1),
-                TemplateExerciseCreate(name="Leg Curls", recommended_sets=3, recommended_reps="10-12", day_number=4, order=2),
-                TemplateExerciseCreate(name="Leg Extensions", recommended_sets=3, recommended_reps="12-15", day_number=4, order=3),
+                TemplateExerciseCreate(name="Front Squats", recommended_sets=3, recommended_reps="8-10", day_number=4, order=2),
+                TemplateExerciseCreate(name="Bulgarian Split Squats", recommended_sets=3, recommended_reps="10-12", day_number=4, order=3),
+                TemplateExerciseCreate(name="Lying Leg Curls", recommended_sets=3, recommended_reps="12-15", day_number=4, order=4),
+                TemplateExerciseCreate(name="Seated Calf Raises", recommended_sets=4, recommended_reps="15-20", day_number=4, order=5),
             ],
         )
         create_workout_template(db, ul_split)
