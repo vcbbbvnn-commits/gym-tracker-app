@@ -14,6 +14,8 @@ const FOCUS_CONFIG = {
   TRICEPS:   { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)" },
   PUSH:      { emoji: "↗️", color: "#f97316", glow: "rgba(249,115,22,0.2)" },
   PULL:      { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)" },
+  UPPER:     { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
+  LOWER:     { emoji: "👖", color: "#34d399", glow: "rgba(52,211,153,0.2)" },
   TRAINING:  { emoji: "⚡", color: "#fbbf24", glow: "rgba(251,191,36,0.2)" },
   REST:      { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)"  },
 };
