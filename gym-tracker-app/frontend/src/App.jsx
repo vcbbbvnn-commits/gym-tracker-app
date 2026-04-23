@@ -1,3 +1,4 @@
+// Version 1.0.1 - Build Trigger
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
