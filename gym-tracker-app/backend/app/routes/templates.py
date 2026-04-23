@@ -113,7 +113,7 @@ def _get_day_focus(exercises) -> str:
         elif any(w in name for w in ["leg extension", "leg curl", "calf", "romanian deadlift"]): scores["LEGS"] += 1
         
         # CHEST
-        if any(w in name for w in ["bench press", "chest press"]): scores["CHEST"] += 3
+        if any(w in name for w in ["bench press", "chest press", "incline press", "db press"]): scores["CHEST"] += 3
         elif any(w in name for w in ["fly", "pec deck", "crossover", "dip"]): scores["CHEST"] += 1
         
         # BACK
