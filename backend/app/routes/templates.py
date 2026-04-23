@@ -95,63 +95,58 @@ def create_workout_from_template(
 
 
 def _get_day_focus(exercises) -> str:
-    """Accurately identify the primary focus of a workout using a weighted scoring system."""
+    """Identify the primary focus, prioritizing specific muscle groups for Bro Splits."""
     if not exercises:
         return "REST"
         
     scores = {
         "CHEST": 0, "BACK": 0, "LEGS": 0, "SHOULDERS": 0, 
-        "BICEPS": 0, "TRICEPS": 0, "PUSH": 0, "PULL": 0
+        "BICEPS": 0, "TRICEPS": 0
     }
     
     for ex in exercises:
         name = ex.name.lower()
-        # Compound movements = 3 points, Isolation = 1 point
-        
         # LEGS
         if any(w in name for w in ["squat", "leg press", "lunge", "hack squat"]): scores["LEGS"] += 3
         elif any(w in name for w in ["leg extension", "leg curl", "calf", "romanian deadlift"]): scores["LEGS"] += 1
-        
         # CHEST
         if any(w in name for w in ["bench press", "chest press", "incline press", "db press"]): scores["CHEST"] += 3
         elif any(w in name for w in ["fly", "pec deck", "crossover", "dip"]): scores["CHEST"] += 1
-        
         # BACK
         if any(w in name for w in ["deadlift", "row", "pull-up", "pulldown", "t-bar"]): scores["BACK"] += 3
         elif any(w in name for w in ["face pull", "shrug", "lat"]): 
             if "lateral" not in name: scores["BACK"] += 1
-            
         # SHOULDERS
         if any(w in name for w in ["overhead press", "shoulder press", "military press"]): scores["SHOULDERS"] += 3
         elif any(w in name for w in ["lateral raise", "front raise", "rear delt"]): scores["SHOULDERS"] += 1
-        
-        # ARMS (Specific)
+        # ARMS
         if "bicep" in name or ("curl" in name and "leg" not in name): scores["BICEPS"] += 1
         if "tricep" in name or any(w in name for w in ["skull crusher", "pushdown", "extension"]):
             if "leg" not in name: scores["TRICEPS"] += 1
 
     # Determine winner
     top_focus = max(scores, key=scores.get)
-    if scores[top_focus] == 0:
+    max_score = scores[top_focus]
+    if max_score == 0:
         return "TRAINING"
         
-    # Heuristics for Splits
+    # Only use complex labels if there's a strong secondary muscle (at least 50% of top score)
+    # This prevents Bro Split days from being mislabeled as PUSH/UPPER
+    secondary_muscles = [m for m, s in scores.items() if s >= (max_score * 0.5) and m != top_focus]
+    
+    if not secondary_muscles:
+        return top_focus
+
+    # Mix detection for PPL/Upper-Lower
     has_chest = scores["CHEST"] > 0
     has_back = scores["BACK"] > 0
     has_shoulders = scores["SHOULDERS"] > 0
-    has_legs = scores["LEGS"] > 0
     
-    # If it's a mix of upper body push muscles
     if has_chest and has_shoulders and not has_back:
         return "PUSH"
-    # If it's a mix of pull muscles
     if has_back and scores["BICEPS"] > 0 and not has_chest:
         return "PULL"
-    # If it's a balanced upper body day
     if has_chest and has_back:
         return "UPPER"
-    # If it's primarily legs
-    if has_legs and scores["LEGS"] >= scores["CHEST"] and scores["LEGS"] >= scores["BACK"]:
-        return "LEGS"
         
     return top_focus

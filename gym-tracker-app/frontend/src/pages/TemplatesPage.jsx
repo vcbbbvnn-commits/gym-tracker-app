@@ -25,7 +25,7 @@ function getDayFocus(exercises) {
   
   const scores = {
     CHEST: 0, BACK: 0, LEGS: 0, SHOULDERS: 0, 
-    BICEPS: 0, TRICEPS: 0, PUSH: 0, PULL: 0
+    BICEPS: 0, TRICEPS: 0
   };
 
   exercises.forEach(ex => {
@@ -35,7 +35,7 @@ function getDayFocus(exercises) {
     else if (name.includes("leg extension") || name.includes("leg curl") || name.includes("calf") || name.includes("romanian deadlift")) scores.LEGS += 1;
     
     // CHEST
-    if (name.includes("bench press") || name.includes("chest press")) scores.CHEST += 3;
+    if (name.includes("bench press") || name.includes("chest press") || name.includes("incline press") || name.includes("db press")) scores.CHEST += 3;
     else if (name.includes("fly") || name.includes("pec deck") || name.includes("crossover") || name.includes("dip")) scores.CHEST += 1;
     
     // BACK
@@ -52,17 +52,23 @@ function getDayFocus(exercises) {
   });
 
   const topFocus = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-  if (scores[topFocus] === 0) return "TRAINING";
+  const maxScore = scores[topFocus];
+  if (maxScore === 0) return "TRAINING";
+
+  // Threshold for secondary muscles: at least 50% of the primary score
+  const secondaryMuscles = Object.keys(scores).filter(m => scores[m] >= (maxScore * 0.5) && m !== topFocus);
+  
+  if (secondaryMuscles.length === 0) {
+    return topFocus;
+  }
 
   const hasChest = scores.CHEST > 0;
   const hasBack = scores.BACK > 0;
   const hasShoulders = scores.SHOULDERS > 0;
-  const hasLegs = scores.LEGS > 0;
 
   if (hasChest && hasShoulders && !hasBack) return "PUSH";
   if (hasBack && scores.BICEPS > 0 && !hasChest) return "PULL";
   if (hasChest && hasBack) return "UPPER";
-  if (hasLegs && scores.LEGS >= scores.CHEST && scores.LEGS >= scores.BACK) return "LEGS";
 
   return topFocus;
 }
