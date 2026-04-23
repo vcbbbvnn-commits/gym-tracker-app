@@ -21,12 +21,20 @@ const FOCUS_CONFIG = {
 function getDayFocus(exercises) {
   if (!exercises || exercises.length === 0) return "REST";
   const names = exercises.map(e => e.name.toLowerCase()).join(" ");
-  if (names.includes("chest") || names.includes("bench") || names.includes("pec") || names.includes("incline")) return "CHEST";
-  if (names.includes("back") || names.includes("row") || names.includes("lat") || names.includes("pull-up") || names.includes("pulldown")) return "BACK";
-  if (names.includes("shoulder") || names.includes("lateral") || names.includes("shrug") || names.includes("delt") || names.includes("overhead")) return "SHOULDERS";
-  if (names.includes("leg") || names.includes("squat") || names.includes("calf") || names.includes("lunge") || names.includes("romanian")) return "LEGS";
+  
+  // Priority 1: Specific Arms
   if (names.includes("bicep") || names.includes("curl") || names.includes("hammer")) return "BICEPS";
   if (names.includes("tricep") || names.includes("skull") || names.includes("pushdown") || names.includes("dip") || names.includes("close-grip")) return "TRICEPS";
+  
+  // Priority 2: Major Groups
+  // Check for 'back' as a distinct word or specific back terms
+  const words = names.split(/\s+/);
+  if (words.includes("back") || words.includes("row") || words.includes("pull-up") || words.includes("pulldown") || names.includes("lat pulldown")) return "BACK";
+  
+  if (names.includes("shoulder") || names.includes("lateral") || names.includes("shrug") || names.includes("delt") || names.includes("overhead")) return "SHOULDERS";
+  if (names.includes("leg") || names.includes("squat") || names.includes("calf") || names.includes("lunge") || names.includes("romanian")) return "LEGS";
+  if (names.includes("chest") || names.includes("bench") || names.includes("pec") || names.includes("incline")) return "CHEST";
+  
   if (names.includes("push")) return "PUSH";
   if (names.includes("pull")) return "PULL";
   return "TRAINING";

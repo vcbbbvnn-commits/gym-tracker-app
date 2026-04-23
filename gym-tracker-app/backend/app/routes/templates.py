@@ -97,20 +97,30 @@ def create_workout_from_template(
 def _get_day_focus(exercises) -> str:
     """Guess the muscle group focus from exercise names."""
     names = " ".join(e.name.lower() for e in exercises)
-    if any(w in names for w in ["chest", "bench", "pec", "incline"]):
-        return "CHEST"
-    if any(w in names for w in ["back", "row", "lat", "pull-up", "pulldown"]):
-        return "BACK"
-    if any(w in names for w in ["shoulder", "press", "lateral", "shrug", "delt", "overhead"]):
-        return "SHOULDERS"
-    if any(w in names for w in ["leg", "squat", "calf", "lunge", "romanian", "deadlift"]):
-        return "LEGS"
+    
+    # Priority 1: Specific Arms
     if any(w in names for w in ["bicep", "curl", "hammer"]):
         return "BICEPS"
     if any(w in names for w in ["tricep", "pushdown", "skull", "dip", "close-grip"]):
         return "TRICEPS"
+        
+    # Priority 2: Major Groups (avoiding substring matches like 'lat' in 'lateral')
+    # Check for 'back' as a word, or specific back exercises
+    if any(w in names.split() for w in ["back", "row", "pull-up", "pulldown"]) or "lat pulldown" in names:
+        return "BACK"
+        
+    if any(w in names for w in ["shoulder", "lateral", "shrug", "delt", "overhead"]):
+        return "SHOULDERS"
+        
+    if any(w in names for w in ["leg", "squat", "calf", "lunge", "romanian", "deadlift"]):
+        return "LEGS"
+        
+    if any(w in names for w in ["chest", "bench", "pec", "incline"]):
+        return "CHEST"
+        
     if any(w in names for w in ["push"]):
         return "PUSH"
     if any(w in names for w in ["pull"]):
         return "PULL"
+        
     return "TRAINING"

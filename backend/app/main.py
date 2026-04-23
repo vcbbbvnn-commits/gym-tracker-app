@@ -50,12 +50,13 @@ def seed_templates():
                 TemplateExerciseCreate(name="Overhead Extension", recommended_sets=3, recommended_reps="10-12", day_number=3, order=4),
                 TemplateExerciseCreate(name="Tricep Dips", recommended_sets=3, recommended_reps="10-15", day_number=3, order=5),
 
-                # Day 4: Thursday - BACK
+                # Day 4: Thursday - BACK (Updated for "Exact Back Workout")
                 TemplateExerciseCreate(name="Deadlifts", recommended_sets=4, recommended_reps="5-8", day_number=4, order=1),
-                TemplateExerciseCreate(name="Lat Pulldowns", recommended_sets=4, recommended_reps="8-12", day_number=4, order=2),
-                TemplateExerciseCreate(name="Bent Over Rows", recommended_sets=3, recommended_reps="8-10", day_number=4, order=3),
-                TemplateExerciseCreate(name="Seated Cable Rows", recommended_sets=3, recommended_reps="10-12", day_number=4, order=4),
-                TemplateExerciseCreate(name="Single Arm DB Rows", recommended_sets=3, recommended_reps="8-12", day_number=4, order=5),
+                TemplateExerciseCreate(name="Wide-Grip Pull-ups", recommended_sets=3, recommended_reps="8-12", day_number=4, order=2),
+                TemplateExerciseCreate(name="Bent Over Barbell Rows", recommended_sets=4, recommended_reps="8-10", day_number=4, order=3),
+                TemplateExerciseCreate(name="T-Bar Rows", recommended_sets=3, recommended_reps="8-10", day_number=4, order=4),
+                TemplateExerciseCreate(name="Lat Pulldowns", recommended_sets=3, recommended_reps="10-12", day_number=4, order=5),
+                TemplateExerciseCreate(name="Seated Cable Rows", recommended_sets=3, recommended_reps="10-12", day_number=4, order=6),
 
                 # Day 5: Friday - BICEPS
                 TemplateExerciseCreate(name="Barbell Curls", recommended_sets=4, recommended_reps="8-10", day_number=5, order=1),
