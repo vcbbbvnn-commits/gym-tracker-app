@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, get_current_user
@@ -37,7 +38,7 @@ def get_templates_by_category(category: str, db: Session = Depends(get_db)):
 @router.post("/templates/use/{template_id}")
 def create_workout_from_template(
     template_id: int,
-    day_number: int,
+    day_number: Optional[int] = Query(default=None, description="Specific day to load (1-7). If omitted, loads Day 1."),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -46,19 +47,28 @@ def create_workout_from_template(
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
 
+    # Default to day 1 if no day specified (backward compat)
+    if day_number is None:
+        day_number = 1
+
     # Filter exercises for the requested day only
     day_exercises = [e for e in template.exercises if e.day_number == day_number]
+
+    # If no exercises for that day, fall back to day 1
+    if not day_exercises:
+        day_number = 1
+        day_exercises = [e for e in template.exercises if e.day_number == 1]
 
     if not day_exercises:
         raise HTTPException(
             status_code=400,
-            detail=f"No exercises found for Day {day_number} in this template",
+            detail=f"No exercises found in this template",
         )
 
-    # Derive a focus label from the day's exercises
+    # Derive a focus label
     focus = _get_day_focus(day_exercises)
 
-    # Create a descriptive workout name for this day
+    # Create a descriptive workout name
     workout_name = f"{template.name} – Day {day_number}: {focus}"
 
     workout = Workout(
@@ -89,15 +99,15 @@ def _get_day_focus(exercises) -> str:
     names = " ".join(e.name.lower() for e in exercises)
     if any(w in names for w in ["chest", "bench", "pec", "incline"]):
         return "CHEST"
-    if any(w in names for w in ["back", "row", "lat", "deadlift", "pull-up", "pulldown"]):
+    if any(w in names for w in ["back", "row", "lat", "pull-up", "pulldown"]):
         return "BACK"
     if any(w in names for w in ["shoulder", "press", "lateral", "shrug", "delt", "overhead"]):
         return "SHOULDERS"
-    if any(w in names for w in ["leg", "squat", "calf", "lunge", "hamstring", "quad", "romanian"]):
+    if any(w in names for w in ["leg", "squat", "calf", "lunge", "romanian", "deadlift"]):
         return "LEGS"
     if any(w in names for w in ["bicep", "curl", "hammer"]):
         return "BICEPS"
-    if any(w in names for w in ["tricep", "pushdown", "skull", "dip", "extension"]):
+    if any(w in names for w in ["tricep", "pushdown", "skull", "dip", "close-grip"]):
         return "TRICEPS"
     if any(w in names for w in ["push"]):
         return "PUSH"
