@@ -37,28 +37,43 @@ def get_templates_by_category(category: str, db: Session = Depends(get_db)):
 @router.post("/templates/use/{template_id}")
 def create_workout_from_template(
     template_id: int,
+    day_number: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a new workout based on a template."""
+    """Create a new workout session for a specific day of a template."""
     template = template_service.get_template_by_id(db, template_id)
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
 
-    # Create workout
+    # Filter exercises for the requested day only
+    day_exercises = [e for e in template.exercises if e.day_number == day_number]
+
+    if not day_exercises:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No exercises found for Day {day_number} in this template",
+        )
+
+    # Derive a focus label from the day's exercises
+    focus = _get_day_focus(day_exercises)
+
+    # Create a descriptive workout name for this day
+    workout_name = f"{template.name} – Day {day_number}: {focus}"
+
     workout = Workout(
-        name=template.name,
-        description=template.description,
+        name=workout_name,
+        description=f"Day {day_number} of {template.name}. Focus: {focus}",
         user_id=current_user.id,
     )
     db.add(workout)
     db.flush()
 
-    # Add exercises from template
-    for template_exercise in template.exercises:
+    # Add only this day's exercises
+    for template_exercise in sorted(day_exercises, key=lambda e: e.order):
         exercise = Exercise(
             name=template_exercise.name,
-            notes=f"Recommended: {template_exercise.recommended_sets} sets x {template_exercise.recommended_reps} reps. {template_exercise.notes or ''}",
+            notes=f"{template_exercise.recommended_sets} sets × {template_exercise.recommended_reps} reps",
             workout_id=workout.id,
         )
         db.add(exercise)
@@ -67,3 +82,25 @@ def create_workout_from_template(
     db.refresh(workout)
 
     return {"message": "Workout created from template", "workout_id": workout.id}
+
+
+def _get_day_focus(exercises) -> str:
+    """Guess the muscle group focus from exercise names."""
+    names = " ".join(e.name.lower() for e in exercises)
+    if any(w in names for w in ["chest", "bench", "pec", "incline"]):
+        return "CHEST"
+    if any(w in names for w in ["back", "row", "lat", "deadlift", "pull-up", "pulldown"]):
+        return "BACK"
+    if any(w in names for w in ["shoulder", "press", "lateral", "shrug", "delt", "overhead"]):
+        return "SHOULDERS"
+    if any(w in names for w in ["leg", "squat", "calf", "lunge", "hamstring", "quad", "romanian"]):
+        return "LEGS"
+    if any(w in names for w in ["bicep", "curl", "hammer"]):
+        return "BICEPS"
+    if any(w in names for w in ["tricep", "pushdown", "skull", "dip", "extension"]):
+        return "TRICEPS"
+    if any(w in names for w in ["push"]):
+        return "PUSH"
+    if any(w in names for w in ["pull"]):
+        return "PULL"
+    return "TRAINING"
