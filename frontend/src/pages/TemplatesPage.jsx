@@ -12,6 +12,7 @@ const FOCUS_CONFIG = {
   LEGS:      { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)" },
   BICEPS:    { emoji: "💪", color: "#fbbf24", glow: "rgba(251,191,36,0.2)" },
   TRICEPS:   { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)" },
+  ARMS:      { emoji: "💪", color: "#fb7185", glow: "rgba(251,113,133,0.2)" },
   PUSH:      { emoji: "↗️", color: "#f97316", glow: "rgba(249,115,22,0.2)" },
   PULL:      { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)" },
   UPPER:     { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
@@ -65,10 +66,13 @@ function getDayFocus(exercises) {
   const hasChest = scores.CHEST > 0;
   const hasBack = scores.BACK > 0;
   const hasShoulders = scores.SHOULDERS > 0;
+  const hasBiceps = scores.BICEPS > 0;
+  const hasTriceps = scores.TRICEPS > 0;
 
   if (hasChest && hasShoulders && !hasBack) return "PUSH";
   if (hasBack && scores.BICEPS > 0 && !hasChest) return "PULL";
   if (hasChest && hasBack) return "UPPER";
+  if (hasBiceps && hasTriceps && !hasChest && !hasBack && !hasShoulders && scores.LEGS === 0) return "ARMS";
   
   // If it's primarily legs and no upper body, call it LOWER (better for Upper/Lower split)
   if (scores.LEGS > 0 && !hasChest && !hasBack) return "LOWER";
