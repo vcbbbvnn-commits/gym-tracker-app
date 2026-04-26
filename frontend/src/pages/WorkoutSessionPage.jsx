@@ -22,6 +22,14 @@ const FOCUS_CONFIG = {
   TRAINING:  { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", icon: "⚡" },
 };
 
+Object.assign(FOCUS_CONFIG, {
+  CHEST: { ...FOCUS_CONFIG.CHEST, color: "#22d3ee", bg: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.3)" },
+  LEGS: { ...FOCUS_CONFIG.LEGS, color: "#a3e635", bg: "rgba(163,230,53,0.12)", border: "rgba(163,230,53,0.3)" },
+  BICEPS: { ...FOCUS_CONFIG.BICEPS, color: "#67e8f9", bg: "rgba(103,232,249,0.12)", border: "rgba(103,232,249,0.3)" },
+  PUSH: { ...FOCUS_CONFIG.PUSH, color: "#22d3ee", bg: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.3)" },
+  TRAINING: { ...FOCUS_CONFIG.TRAINING, color: "#a3e635", bg: "rgba(163,230,53,0.12)", border: "rgba(163,230,53,0.3)" },
+});
+
 function getFocusFromName(name = "") {
   const n = name.toUpperCase();
   for (const key of Object.keys(FOCUS_CONFIG)) {
@@ -313,7 +321,7 @@ function WorkoutSessionPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div
           className="h-14 w-14 animate-spin rounded-full border-4 border-t-transparent"
-          style={{ borderColor: "#f97316", borderTopColor: "transparent" }}
+          style={{ borderColor: "#22d3ee", borderTopColor: "transparent" }}
         />
       </div>
     );
@@ -335,7 +343,7 @@ function WorkoutSessionPage() {
   const dayLabel = dayMatch ? `DAY ${dayMatch[1]}` : null;
 
   return (
-    <div className="min-h-screen pb-24 pt-6" style={{ background: "#080a0e" }}>
+    <div className="min-h-screen pb-24 pt-2">
       <div className="mx-auto max-w-3xl px-4">
 
         {/* ── Session Header ── */}

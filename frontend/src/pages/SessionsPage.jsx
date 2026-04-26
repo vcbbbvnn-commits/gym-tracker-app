@@ -5,12 +5,12 @@ import api from "../api/client";
 const workoutTemplates = ["Push", "Pull", "Legs", "Upper", "Lower", "Full Body"];
 
 const typeColors = {
-  Push: "#f97316",
-  Pull: "#a78bfa",
-  Legs: "#34d399",
-  Upper: "#fbbf24",
-  Lower: "#60a5fa",
-  "Full Body": "#f472b6",
+  Push: "#22d3ee",
+  Pull: "#8b5cf6",
+  Legs: "#a3e635",
+  Upper: "#67e8f9",
+  Lower: "#34d399",
+  "Full Body": "#fb7185",
 };
 
 const typeIcons = {
@@ -71,7 +71,7 @@ function SessionsPage() {
     }
   };
 
-  const color = typeColors[form.name] || "#f97316";
+  const color = typeColors[form.name] || "#22d3ee";
 
   return (
     <div className="space-y-6">
@@ -209,11 +209,11 @@ function SessionsPage() {
           {/* Templates hint */}
           <div
             className="mt-5 rounded-xl px-4 py-3"
-            style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)" }}
+            style={{ background: "rgba(34,211,238,0.06)", border: "1px solid rgba(34,211,238,0.15)" }}
           >
             <p className="text-xs text-gray-500">
               Want pre-built programs?{" "}
-              <Link to="/templates" className="font-semibold transition hover:text-orange-300" style={{ color: "#f97316" }}>
+              <Link to="/templates" className="font-semibold text-cyan-300 transition hover:text-lime-300">
                 Browse Templates →
               </Link>
             </p>
@@ -243,7 +243,7 @@ function SessionsPage() {
             {!loading && workouts.length > 0 && (
               <div
                 className="rounded-xl px-3 py-1.5 text-xs font-bold"
-                style={{ background: "rgba(249,115,22,0.12)", color: "#f97316", border: "1px solid rgba(249,115,22,0.25)" }}
+                style={{ background: "rgba(34,211,238,0.12)", color: "#67e8f9", border: "1px solid rgba(34,211,238,0.25)" }}
               >
                 {workouts.length} Active
               </div>
@@ -283,7 +283,7 @@ function SessionsPage() {
           {!loading && workouts.length > 0 && (
             <div className="space-y-3">
               {workouts.map((workout, idx) => {
-                const wColor = typeColors[workout.name] || "#f97316";
+                const wColor = typeColors[workout.name] || "#22d3ee";
                 const wIcon = typeIcons[workout.name] || "💪";
                 const setCount = workout.exercises?.reduce((t, e) => t + e.sets.length, 0) || 0;
 
@@ -336,9 +336,9 @@ function SessionsPage() {
                           to={`/workouts/${workout.id}`}
                           className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 hover:scale-105"
                           style={{
-                            background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
-                            color: "white",
-                            boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
+                            background: "linear-gradient(135deg, #22d3ee 0%, #a3e635 100%)",
+                            color: "#071014",
+                            boxShadow: "0 4px 15px rgba(34,211,238,0.2)",
                           }}
                         >
                           <span className="hidden sm:inline">Open</span>

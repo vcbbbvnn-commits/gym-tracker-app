@@ -69,10 +69,10 @@ function ProgressPage() {
   }, []);
 
   const stats = [
-    { label: "Total Workouts", value: summary?.total_workouts ?? 0, icon: "🏋️", color: "#f97316", delay: "0ms" },
-    { label: "Total Exercises", value: summary?.total_exercises ?? 0, icon: "💪", color: "#a78bfa", delay: "80ms" },
-    { label: "Total Sets", value: summary?.total_sets ?? 0, icon: "🔢", color: "#34d399", delay: "160ms" },
-    { label: "Volume (kg)", value: summary?.total_volume ?? 0, icon: "⚖️", color: "#fbbf24", delay: "240ms" },
+    { label: "Total Workouts", value: summary?.total_workouts ?? 0, icon: "🏋️", color: "#22d3ee", delay: "0ms" },
+    { label: "Total Exercises", value: summary?.total_exercises ?? 0, icon: "💪", color: "#8b5cf6", delay: "80ms" },
+    { label: "Total Sets", value: summary?.total_sets ?? 0, icon: "🔢", color: "#a3e635", delay: "160ms" },
+    { label: "Volume (kg)", value: summary?.total_volume ?? 0, icon: "⚖️", color: "#67e8f9", delay: "240ms" },
   ];
 
   return (
@@ -176,8 +176,8 @@ function ProgressPage() {
                     animationDelay: `${idx * 60}ms`,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
-                    e.currentTarget.style.background = "rgba(249,115,22,0.05)";
+                    e.currentTarget.style.borderColor = "rgba(34,211,238,0.3)";
+                    e.currentTarget.style.background = "rgba(34,211,238,0.05)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
@@ -187,7 +187,7 @@ function ProgressPage() {
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <h3
-                        className="font-semibold text-white transition-colors group-hover:text-orange-400"
+                        className="font-semibold text-white transition-colors group-hover:text-cyan-300"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
                         {item.exercise_name}
@@ -195,7 +195,7 @@ function ProgressPage() {
                       <p className="text-xs text-gray-600">{item.total_sets} sets tracked</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-orange-400">{item.best_weight} kg</p>
+                      <p className="text-sm font-bold text-cyan-300">{item.best_weight} kg</p>
                       <p className="text-xs text-gray-600">Best weight</p>
                     </div>
                   </div>
@@ -205,7 +205,7 @@ function ProgressPage() {
                   </div>
                   <div className="mt-2 flex justify-between text-xs text-gray-600">
                     <span>Volume: {item.total_volume} kg</span>
-                    <span className="text-orange-600 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="text-lime-300 opacity-0 transition-opacity group-hover:opacity-100">
                       View history →
                     </span>
                   </div>
@@ -288,7 +288,7 @@ function ProgressPage() {
                   <div className="mt-3 fire-divider" />
                   <div className="mt-3 flex items-center gap-4 text-xs text-gray-600">
                     <span className="flex items-center gap-1">
-                      <span style={{ color: "#f97316" }}>●</span>
+                      <span style={{ color: "#22d3ee" }}>●</span>
                       {setCount} total sets
                     </span>
                   </div>

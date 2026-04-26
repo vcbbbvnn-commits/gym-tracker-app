@@ -6,18 +6,18 @@ const DAY_NAMES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const FOCUS_CONFIG = {
-  CHEST: { emoji: "🏋️", color: "#f97316", glow: "rgba(249,115,22,0.2)", muscles: ["Chest"] },
+  CHEST: { emoji: "🏋️", color: "#22d3ee", glow: "rgba(34,211,238,0.18)", muscles: ["Chest"] },
   BACK: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back"] },
   SHOULDERS: { emoji: "💪", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Shoulders"] },
   LEGS: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Calves"] },
-  BICEPS: { emoji: "💪", color: "#fbbf24", glow: "rgba(251,191,36,0.2)", muscles: ["Biceps"] },
+  BICEPS: { emoji: "💪", color: "#a3e635", glow: "rgba(163,230,53,0.18)", muscles: ["Biceps"] },
   TRICEPS: { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Triceps"] },
   ARMS: { emoji: "💪", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Biceps", "Triceps"] },
-  PUSH: { emoji: "↗️", color: "#f97316", glow: "rgba(249,115,22,0.2)", muscles: ["Chest", "Shoulders", "Triceps"] },
+  PUSH: { emoji: "↗️", color: "#22d3ee", glow: "rgba(34,211,238,0.18)", muscles: ["Chest", "Shoulders", "Triceps"] },
   PULL: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back", "Biceps", "Rear delts"] },
   UPPER: { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Chest", "Back", "Shoulders", "Arms"] },
   LOWER: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Glutes", "Calves"] },
-  TRAINING: { emoji: "⚡", color: "#fbbf24", glow: "rgba(251,191,36,0.2)", muscles: ["Training"] },
+  TRAINING: { emoji: "⚡", color: "#a3e635", glow: "rgba(163,230,53,0.18)", muscles: ["Training"] },
   REST: { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)", muscles: ["Recovery"] },
 };
 
@@ -293,7 +293,7 @@ function TemplatesPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-14 w-14 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-cyan-300 border-t-transparent" />
           <p className="text-sm uppercase tracking-widest text-gray-500">Loading programs...</p>
         </div>
       </div>
@@ -301,7 +301,7 @@ function TemplatesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080a0e] pb-20 pt-8 text-white">
+    <main className="min-h-screen pb-20 pt-2 text-white">
       <div className="mx-auto max-w-[1500px] px-4">
         <section className="mb-8">
           <span className="section-badge mb-4 inline-flex">Training Programs</span>
@@ -324,7 +324,7 @@ function TemplatesPage() {
                     type="button"
                     onClick={() => handleSelectTemplate(template.id)}
                     className={`min-h-11 whitespace-nowrap rounded-xl px-4 text-xs font-black uppercase tracking-[0.16em] transition ${
-                      isActive ? "bg-orange-500 text-black shadow-lg shadow-orange-500/20" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
+                      isActive ? "bg-white text-slate-950 shadow-lg shadow-cyan-400/10" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
                     }`}
                   >
                     {template.category}
@@ -344,9 +344,9 @@ function TemplatesPage() {
         {activeTemplate && (
           <>
             <section className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-              <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-5">
+              <div className="rounded-2xl border border-cyan-300/20 bg-gradient-to-br from-cyan-400/10 via-white/[0.025] to-lime-300/5 p-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-orange-400/25 bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+                  <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">
                     {meta.level}
                   </span>
                   <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">

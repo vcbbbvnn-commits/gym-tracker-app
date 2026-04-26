@@ -5,24 +5,22 @@ export default {
     extend: {
       colors: {
         // Dark base palette
-        void: "#080a0e",
-        abyss: "#0c0f14",
-        carbon: "#111418",
-        iron: "#181c22",
-        steel: "#1e2329",
-        // Accent palette
-        fire: "#f97316",      // orange fire
-        ember: "#ea580c",     // deep orange
-        blaze: "#fb923c",     // light orange
-        amber: "#f59e0b",     // golden amber
-        gold: "#fbbf24",      // bright gold
+        void: "#07090d",
+        abyss: "#0b1017",
+        carbon: "#0d1219",
+        iron: "#141a22",
+        steel: "#202833",
+        signal: "#a3e635",
+        aqua: "#22d3ee",
+        violetCore: "#8b5cf6",
+        roseCore: "#fb7185",
         ash: "#6b7280",       // muted gray
         // Kept for legacy compat
         midnight: "#08111f",
         ink: "#0f172a",
-        cyanGlow: "#f97316",
-        coral: "#ef4444",
-        sand: "#fef3c7",
+        cyanGlow: "#22d3ee",
+        coral: "#fb7185",
+        sand: "#f8fafc",
       },
       fontFamily: {
         display: ["'Bebas Neue'", "'Space Grotesk'", "sans-serif"],
@@ -30,9 +28,9 @@ export default {
         body: ["'Inter'", "sans-serif"],
       },
       boxShadow: {
-        fire: "0 0 40px rgba(249,115,22,0.25), 0 0 80px rgba(249,115,22,0.1)",
+        fire: "0 0 40px rgba(34,211,238,0.22), 0 0 80px rgba(163,230,53,0.1)",
         panel: "0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)",
-        glow: "0 0 30px rgba(249,115,22,0.4)",
+        glow: "0 0 30px rgba(34,211,238,0.32)",
         card: "0 8px 32px rgba(0,0,0,0.5)",
       },
       animation: {
@@ -63,8 +61,8 @@ export default {
           "66%": { transform: "translateY(-6px) rotate(-1deg)" },
         },
         pulseFire: {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(249,115,22,0.3)" },
-          "50%": { boxShadow: "0 0 50px rgba(249,115,22,0.6), 0 0 80px rgba(249,115,22,0.2)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(34,211,238,0.22)" },
+          "50%": { boxShadow: "0 0 50px rgba(34,211,238,0.34), 0 0 80px rgba(163,230,53,0.16)" },
         },
         slideLeft: {
           "0%": { opacity: "0", transform: "translateX(-30px)" },
@@ -84,11 +82,11 @@ export default {
         },
       },
       backgroundImage: {
-        "fire-gradient": "linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%)",
-        "gold-gradient": "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-        "dark-gradient": "linear-gradient(180deg, #080a0e 0%, #0c0f14 40%, #111418 100%)",
+        "fire-gradient": "linear-gradient(135deg, #22d3ee 0%, #a3e635 100%)",
+        "gold-gradient": "linear-gradient(135deg, #a3e635 0%, #22d3ee 100%)",
+        "dark-gradient": "linear-gradient(180deg, #07090d 0%, #0b1017 45%, #0d1219 100%)",
         "card-gradient": "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
-        "shimmer-gradient": "linear-gradient(90deg, transparent 0%, rgba(249,115,22,0.15) 50%, transparent 100%)",
+        "shimmer-gradient": "linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.15) 50%, transparent 100%)",
       },
     },
   },
