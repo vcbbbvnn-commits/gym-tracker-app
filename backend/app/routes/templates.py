@@ -148,5 +148,9 @@ def _get_day_focus(exercises) -> str:
         return "PULL"
     if has_chest and has_back:
         return "UPPER"
+    
+    # If primarily legs and no upper body, return LOWER to match UPPER
+    if scores["LEGS"] > 0 and not has_chest and not has_back:
+        return "LOWER"
         
     return top_focus

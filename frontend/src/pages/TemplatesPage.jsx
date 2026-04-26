@@ -69,6 +69,9 @@ function getDayFocus(exercises) {
   if (hasChest && hasShoulders && !hasBack) return "PUSH";
   if (hasBack && scores.BICEPS > 0 && !hasChest) return "PULL";
   if (hasChest && hasBack) return "UPPER";
+  
+  // If it's primarily legs and no upper body, call it LOWER (better for Upper/Lower split)
+  if (scores.LEGS > 0 && !hasChest && !hasBack) return "LOWER";
 
   return topFocus;
 }
