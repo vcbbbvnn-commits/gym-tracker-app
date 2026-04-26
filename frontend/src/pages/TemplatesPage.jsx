@@ -1,64 +1,81 @@
-import { useEffect, useState } from "react";
-import api from "../api/client";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/client";
 
 const DAY_NAMES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const FOCUS_CONFIG = {
-  CHEST:     { emoji: "🏋️", color: "#f97316", glow: "rgba(249,115,22,0.2)" },
-  BACK:      { emoji: "🔙", color: "#3b82f6", glow: "rgba(59,130,246,0.2)" },
-  SHOULDERS: { emoji: "💪", color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
-  LEGS:      { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)" },
-  BICEPS:    { emoji: "💪", color: "#fbbf24", glow: "rgba(251,191,36,0.2)" },
-  TRICEPS:   { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)" },
-  ARMS:      { emoji: "💪", color: "#fb7185", glow: "rgba(251,113,133,0.2)" },
-  PUSH:      { emoji: "↗️", color: "#f97316", glow: "rgba(249,115,22,0.2)" },
-  PULL:      { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)" },
-  UPPER:     { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
-  LOWER:     { emoji: "👖", color: "#34d399", glow: "rgba(52,211,153,0.2)" },
-  TRAINING:  { emoji: "⚡", color: "#fbbf24", glow: "rgba(251,191,36,0.2)" },
-  REST:      { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)"  },
+  CHEST: { emoji: "🏋️", color: "#f97316", glow: "rgba(249,115,22,0.2)", muscles: ["Chest"] },
+  BACK: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back"] },
+  SHOULDERS: { emoji: "💪", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Shoulders"] },
+  LEGS: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Calves"] },
+  BICEPS: { emoji: "💪", color: "#fbbf24", glow: "rgba(251,191,36,0.2)", muscles: ["Biceps"] },
+  TRICEPS: { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Triceps"] },
+  ARMS: { emoji: "💪", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Biceps", "Triceps"] },
+  PUSH: { emoji: "↗️", color: "#f97316", glow: "rgba(249,115,22,0.2)", muscles: ["Chest", "Shoulders", "Triceps"] },
+  PULL: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back", "Biceps", "Rear delts"] },
+  UPPER: { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Chest", "Back", "Shoulders", "Arms"] },
+  LOWER: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Glutes", "Calves"] },
+  TRAINING: { emoji: "⚡", color: "#fbbf24", glow: "rgba(251,191,36,0.2)", muscles: ["Training"] },
+  REST: { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)", muscles: ["Recovery"] },
+};
+
+const CATEGORY_META = {
+  "Bro Split": {
+    level: "Classic",
+    goal: "Muscle focus",
+    rhythm: "5-day split",
+  },
+  "Push/Pull/Legs": {
+    level: "Elite",
+    goal: "Hypertrophy",
+    rhythm: "6-day split",
+  },
+  "Upper/Lower": {
+    level: "Balanced",
+    goal: "Strength + size",
+    rhythm: "4-day split",
+  },
 };
 
 function getDayFocus(exercises) {
   if (!exercises || exercises.length === 0) return "REST";
-  
+
   const scores = {
-    CHEST: 0, BACK: 0, LEGS: 0, SHOULDERS: 0, 
-    BICEPS: 0, TRICEPS: 0
+    CHEST: 0,
+    BACK: 0,
+    LEGS: 0,
+    SHOULDERS: 0,
+    BICEPS: 0,
+    TRICEPS: 0,
   };
 
-  exercises.forEach(ex => {
+  exercises.forEach((ex) => {
     const name = ex.name.toLowerCase();
-    // LEGS
+
     if (name.includes("squat") || name.includes("leg press") || name.includes("lunge")) scores.LEGS += 3;
     else if (name.includes("leg extension") || name.includes("leg curl") || name.includes("calf") || name.includes("romanian deadlift")) scores.LEGS += 1;
-    
-    // CHEST
+
     if (name.includes("bench press") || name.includes("chest press") || name.includes("incline press") || name.includes("db press")) scores.CHEST += 3;
     else if (name.includes("fly") || name.includes("pec deck") || name.includes("crossover") || name.includes("dip")) scores.CHEST += 1;
-    
-    // BACK
+
     if (name.includes("deadlift") || name.includes("row") || name.includes("pull-up") || name.includes("pulldown") || name.includes("t-bar")) scores.BACK += 3;
     else if (name.includes("face pull") || name.includes("shrug") || (name.includes("lat") && !name.includes("lateral"))) scores.BACK += 1;
-    
-    // SHOULDERS
+
     if (name.includes("overhead press") || name.includes("shoulder press") || name.includes("military press")) scores.SHOULDERS += 3;
     else if (name.includes("lateral raise") || name.includes("front raise") || name.includes("rear delt")) scores.SHOULDERS += 1;
-    
-    // ARMS
+
     if (name.includes("bicep") || (name.includes("curl") && !name.includes("leg"))) scores.BICEPS += 1;
     if (name.includes("tricep") || name.includes("skull crusher") || (name.includes("pushdown") && !name.includes("leg"))) scores.TRICEPS += 1;
   });
 
-  const topFocus = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+  const topFocus = Object.keys(scores).reduce((a, b) => (scores[a] > scores[b] ? a : b));
   const maxScore = scores[topFocus];
   if (maxScore === 0) return "TRAINING";
 
-  // Threshold for secondary muscles: at least 50% of the primary score
-  const secondaryMuscles = Object.keys(scores).filter(m => scores[m] >= (maxScore * 0.5) && m !== topFocus);
-  
+  const secondaryMuscles = Object.keys(scores).filter((muscle) => scores[muscle] >= maxScore * 0.5 && muscle !== topFocus);
+
   if (secondaryMuscles.length === 0) {
     return topFocus;
   }
@@ -70,131 +87,145 @@ function getDayFocus(exercises) {
   const hasTriceps = scores.TRICEPS > 0;
 
   if (hasChest && hasShoulders && !hasBack) return "PUSH";
-  if (hasBack && scores.BICEPS > 0 && !hasChest) return "PULL";
+  if (hasBack && hasBiceps && !hasChest) return "PULL";
   if (hasChest && hasBack) return "UPPER";
   if (hasBiceps && hasTriceps && !hasChest && !hasBack && !hasShoulders && scores.LEGS === 0) return "ARMS";
-  
-  // If it's primarily legs and no upper body, call it LOWER (better for Upper/Lower split)
   if (scores.LEGS > 0 && !hasChest && !hasBack) return "LOWER";
 
   return topFocus;
 }
 
-function DayCard({ dayIndex, exercises, templateId, onStart, starting }) {
+function getTemplateDays(template) {
+  const maxDay = Math.max(...template.exercises.map((exercise) => exercise.day_number), 7);
+  return Array.from({ length: maxDay }, (_, index) => ({
+    dayIndex: index,
+    exercises: template.exercises
+      .filter((exercise) => exercise.day_number === index + 1)
+      .sort((a, b) => a.order - b.order),
+  }));
+}
+
+function StatTile({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">{label}</p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function DayCard({ dayIndex, exercises, templateId, onStart, starting, expanded, onToggle }) {
   const dayNum = dayIndex + 1;
   const focus = getDayFocus(exercises);
   const cfg = FOCUS_CONFIG[focus];
   const isRest = focus === "REST";
+  const primaryExercises = exercises.slice(0, 2);
 
   return (
-    <div
-      className="relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1"
+    <article
+      className="relative flex min-h-[248px] flex-col overflow-hidden rounded-2xl border p-4 transition duration-300 hover:-translate-y-1"
       style={{
         background: isRest
-          ? "rgba(10,10,12,0.6)"
-          : `linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)`,
-        border: `1px solid ${isRest ? "rgba(255,255,255,0.05)" : cfg.color + "30"}`,
-        boxShadow: isRest ? "none" : `0 8px 32px rgba(0,0,0,0.4), 0 0 0 0 ${cfg.glow}`,
-        minHeight: "320px",
+          ? "rgba(7,9,12,0.72)"
+          : `linear-gradient(160deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02)), linear-gradient(180deg, ${cfg.glow}, transparent 45%)`,
+        borderColor: isRest ? "rgba(255,255,255,0.06)" : `${cfg.color}40`,
+        boxShadow: isRest ? "none" : `0 18px 45px rgba(0,0,0,0.35), 0 0 24px ${cfg.glow}`,
       }}
     >
-      {/* Top accent bar */}
-      {!isRest && (
-        <div
-          className="h-1 w-full"
-          style={{ background: `linear-gradient(90deg, ${cfg.color}, transparent)` }}
-        />
-      )}
+      <div
+        className="absolute inset-x-0 top-0 h-1"
+        style={{ background: isRest ? "rgba(255,255,255,0.06)" : `linear-gradient(90deg, ${cfg.color}, transparent)` }}
+      />
 
-      {/* Day label */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <span
-          className="text-[10px] font-black tracking-[0.25em] uppercase"
-          style={{ color: isRest ? "#374151" : cfg.color }}
-        >
-          {DAY_NAMES[dayIndex]}
-        </span>
-        <span
-          className="text-[10px] font-semibold"
-          style={{ color: isRest ? "#374151" : "rgba(255,255,255,0.3)" }}
-        >
-          Day {dayNum}
-        </span>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em]" style={{ color: isRest ? "#4b5563" : cfg.color }}>
+            {DAY_NAMES[dayIndex]}
+          </p>
+          <h3 className="mt-3 flex items-center gap-2 text-2xl font-black uppercase tracking-normal text-white" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+            <span>{cfg.emoji}</span>
+            {focus}
+          </h3>
+        </div>
+        <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-bold text-gray-400">Day {dayNum}</span>
       </div>
 
-      {/* Focus / emoji */}
-      <div className="px-4 pb-3 flex items-center gap-2">
-        <span className="text-2xl">{cfg.emoji}</span>
-        <span
-          className="text-lg font-black tracking-tight"
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            color: isRest ? "#374151" : cfg.color,
-          }}
-        >
-          {focus}
-        </span>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {cfg.muscles.map((muscle) => (
+          <span key={muscle} className="rounded-full border px-2 py-1 text-[10px] font-semibold" style={{ borderColor: `${cfg.color}33`, color: isRest ? "#6b7280" : cfg.color }}>
+            {muscle}
+          </span>
+        ))}
       </div>
 
-      {/* Exercise list */}
-      <div className="flex-1 px-4 pb-4 space-y-2 overflow-hidden">
+      <div className="mt-4 flex-1">
         {isRest ? (
-          <p className="text-xs text-gray-600 italic">Rest & recovery day</p>
+          <p className="text-sm italic text-gray-600">Rest & recovery day</p>
         ) : (
-          exercises
-            .sort((a, b) => a.order - b.order)
-            .map((ex, i) => (
-              <div key={ex.id} className="flex items-start gap-2">
-                <span
-                  className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
-                  style={{
-                    background: cfg.color + "22",
-                    color: cfg.color,
-                    border: `1px solid ${cfg.color}40`,
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-[11px] font-semibold text-white leading-tight">{ex.name}</p>
-                  <p className="text-[9px] text-gray-500">
-                    {ex.recommended_sets}×{ex.recommended_reps}
+          <>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500">{exercises.length} exercises</p>
+            <div className="mt-3 space-y-2">
+              {primaryExercises.map((exercise) => (
+                <div key={exercise.id} className="flex items-center justify-between gap-3 rounded-lg bg-black/20 px-3 py-2">
+                  <p className="min-w-0 truncate text-sm font-semibold text-white">{exercise.name}</p>
+                  <p className="shrink-0 text-xs text-gray-500">
+                    {exercise.recommended_sets}x{exercise.recommended_reps}
                   </p>
                 </div>
+              ))}
+            </div>
+
+            {expanded && (
+              <div className="mt-3 space-y-2">
+                {exercises.slice(2).map((exercise) => (
+                  <div key={exercise.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.025] px-3 py-2">
+                    <p className="min-w-0 truncate text-sm font-semibold text-gray-200">{exercise.name}</p>
+                    <p className="shrink-0 text-xs text-gray-500">
+                      {exercise.recommended_sets}x{exercise.recommended_reps}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))
+            )}
+          </>
         )}
       </div>
 
-      {/* Start button */}
       {!isRest && (
-        <div className="p-3 pt-0">
+        <div className="mt-4 flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onStart(templateId, dayNum)}
             disabled={starting}
-            className="w-full rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all duration-200 active:scale-95 disabled:opacity-50"
-            style={{
-              background: starting
-                ? "rgba(255,255,255,0.05)"
-                : `linear-gradient(135deg, ${cfg.color} 0%, ${cfg.color}bb 100%)`,
-              color: starting ? cfg.color : "#000",
-              border: `1px solid ${cfg.color}50`,
-              boxShadow: starting ? "none" : `0 4px 16px ${cfg.color}40`,
-            }}
+            className="min-h-11 flex-1 rounded-xl px-3 text-xs font-black uppercase tracking-[0.14em] text-black transition active:scale-95 disabled:opacity-60"
+            style={{ background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}bf)` }}
           >
-            {starting ? "Starting…" : `▶  Start Day ${dayNum}`}
+            {starting ? "Starting..." : "▶ Start"}
           </button>
+          {exercises.length > 2 && (
+            <button
+              type="button"
+              onClick={onToggle}
+              title={expanded ? "Hide exercises" : "Show exercises"}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-lg font-black text-white transition hover:border-white/20 hover:bg-white/[0.08]"
+              aria-label={expanded ? "Hide exercises" : "Show exercises"}
+            >
+              {expanded ? "⌃" : "⌄"}
+            </button>
+          )}
         </div>
       )}
-    </div>
+    </article>
   );
 }
 
 function TemplatesPage() {
   const [templates, setTemplates] = useState([]);
+  const [activeTemplateId, setActiveTemplateId] = useState(null);
+  const [expandedDays, setExpandedDays] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [startingKey, setStartingKey] = useState(null); // "templateId-dayNum"
+  const [startingKey, setStartingKey] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -203,6 +234,7 @@ function TemplatesPage() {
         setLoading(true);
         const response = await api.get("/templates");
         setTemplates(response.data);
+        setActiveTemplateId(response.data[0]?.id ?? null);
         setError(null);
       } catch (err) {
         setError("Failed to load templates");
@@ -211,16 +243,29 @@ function TemplatesPage() {
         setLoading(false);
       }
     };
+
     fetchTemplates();
   }, []);
+
+  const activeTemplate = useMemo(
+    () => templates.find((template) => template.id === activeTemplateId) ?? templates[0],
+    [activeTemplateId, templates],
+  );
+
+  const days = useMemo(() => (activeTemplate ? getTemplateDays(activeTemplate) : []), [activeTemplate]);
+  const trainingDays = days.filter((day) => day.exercises.length > 0).length;
+  const totalExercises = activeTemplate?.exercises.length ?? 0;
+  const meta = CATEGORY_META[activeTemplate?.category] ?? {
+    level: "Focused",
+    goal: "Training",
+    rhythm: `${trainingDays}-day split`,
+  };
 
   const handleStartDay = async (templateId, dayNumber) => {
     const key = `${templateId}-${dayNumber}`;
     setStartingKey(key);
     try {
-      const response = await api.post(
-        `/templates/use/${templateId}?day_number=${dayNumber}`
-      );
+      const response = await api.post(`/templates/use/${templateId}?day_number=${dayNumber}`);
       navigate(`/workouts/${response.data.workout_id}`);
     } catch (err) {
       console.error("Failed to start day session", err);
@@ -231,124 +276,122 @@ function TemplatesPage() {
     }
   };
 
+  const handleSelectTemplate = (templateId) => {
+    setActiveTemplateId(templateId);
+    setExpandedDays({});
+  };
+
+  const toggleDay = (templateId, dayNumber) => {
+    const key = `${templateId}-${dayNumber}`;
+    setExpandedDays((current) => ({
+      ...current,
+      [key]: !current[key],
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div
-            className="h-14 w-14 rounded-full border-4 border-t-transparent animate-spin"
-            style={{ borderColor: "#f97316", borderTopColor: "transparent" }}
-          />
-          <p className="text-sm text-gray-500 uppercase tracking-widest">Loading programs…</p>
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+          <p className="text-sm uppercase tracking-widest text-gray-500">Loading programs...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen pb-20 pt-8 text-white"
-      style={{ background: "#080a0e" }}
-    >
-      <div className="mx-auto max-w-[1600px] px-4">
-
-        {/* Page header */}
-        <div className="mb-14 text-center">
+    <main className="min-h-screen bg-[#080a0e] pb-20 pt-8 text-white">
+      <div className="mx-auto max-w-[1500px] px-4">
+        <section className="mb-8">
           <span className="section-badge mb-4 inline-flex">Training Programs</span>
-          <h1
-            className="text-5xl font-black uppercase tracking-tight text-white md:text-7xl"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.04em" }}
-          >
-            Choose Your Split
-          </h1>
-          <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-            Pick the training day you want to hit today. Each day is tailored to a specific muscle group — just tap <strong className="text-orange-400">Start Day</strong> to begin.
-          </p>
-        </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-5xl font-black uppercase tracking-normal text-white md:text-7xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                Choose Your Split
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-gray-500 md:text-base">
+                Train by muscle group, movement pattern, or weekly recovery rhythm.
+              </p>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
+              {templates.map((template) => {
+                const isActive = template.id === activeTemplate?.id;
+                return (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => handleSelectTemplate(template.id)}
+                    className={`min-h-11 whitespace-nowrap rounded-xl px-4 text-xs font-black uppercase tracking-[0.16em] transition ${
+                      isActive ? "bg-orange-500 text-black shadow-lg shadow-orange-500/20" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
+                    }`}
+                  >
+                    {template.category}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
         {error && (
-          <div className="mb-8 rounded-2xl bg-red-500/10 border border-red-500/20 p-4 text-center text-red-400">
+          <div className="mb-8 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-center text-red-400">
             {error}
           </div>
         )}
 
-        <div className="space-y-20">
-          {templates.map((template) => {
-            const maxDay = Math.max(...template.exercises.map(e => e.day_number), 7);
-            const days = Array.from({ length: maxDay }, (_, i) => ({
-              dayIndex: i,
-              exercises: template.exercises.filter(e => e.day_number === i + 1),
-            }));
-
-            // Count training days
-            const trainingDays = days.filter(d => d.exercises.length > 0).length;
-
-            return (
-              <section key={template.id}>
-                {/* Template header */}
-                <div
-                  className="mb-6 rounded-2xl p-6"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(249,115,22,0.08) 0%, rgba(255,255,255,0.02) 100%)",
-                    border: "1px solid rgba(249,115,22,0.15)",
-                  }}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <span
-                          className="rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest"
-                          style={{
-                            background: "rgba(249,115,22,0.15)",
-                            color: "#f97316",
-                            border: "1px solid rgba(249,115,22,0.3)",
-                          }}
-                        >
-                          {template.category}
-                        </span>
-                        <span className="text-[11px] text-gray-500">
-                          {trainingDays} training days / week
-                        </span>
-                      </div>
-                      <h2
-                        className="text-2xl font-black uppercase tracking-tight text-white md:text-3xl"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      >
-                        {template.name}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">{template.description}</p>
-                    </div>
-                  </div>
+        {activeTemplate && (
+          <>
+            <section className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+              <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-orange-400/25 bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+                    {meta.level}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
+                    {meta.goal}
+                  </span>
                 </div>
+                <h2 className="mt-4 text-3xl font-black uppercase tracking-normal text-white md:text-5xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                  {activeTemplate.name}
+                </h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-400">{activeTemplate.description}</p>
+              </div>
 
-                {/* Day cards grid */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-                  {days.map(({ dayIndex, exercises }) => (
-                    <DayCard
-                      key={dayIndex}
-                      dayIndex={dayIndex}
-                      exercises={exercises}
-                      templateId={template.id}
-                      onStart={handleStartDay}
-                      starting={startingKey === `${template.id}-${dayIndex + 1}`}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-3 gap-3">
+                <StatTile label="Days" value={trainingDays} />
+                <StatTile label="Exercises" value={totalExercises} />
+                <StatTile label="Rhythm" value={meta.rhythm} />
+              </div>
+            </section>
 
-                {/* Day name labels below grid */}
-                <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-                  {days.map(({ dayIndex }) => (
-                    <p key={dayIndex} className="text-center text-[10px] text-gray-600">
-                      {FULL_DAY_NAMES[dayIndex]}
-                    </p>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+            <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+              {days.map(({ dayIndex, exercises }) => (
+                <DayCard
+                  key={dayIndex}
+                  dayIndex={dayIndex}
+                  exercises={exercises}
+                  templateId={activeTemplate.id}
+                  onStart={handleStartDay}
+                  starting={startingKey === `${activeTemplate.id}-${dayIndex + 1}`}
+                  expanded={Boolean(expandedDays[`${activeTemplate.id}-${dayIndex + 1}`])}
+                  onToggle={() => toggleDay(activeTemplate.id, dayIndex + 1)}
+                />
+              ))}
+            </section>
+
+            <section className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+              {days.map(({ dayIndex }) => (
+                <p key={dayIndex} className="text-center text-[10px] font-bold uppercase tracking-[0.16em] text-gray-700">
+                  {FULL_DAY_NAMES[dayIndex]}
+                </p>
+              ))}
+            </section>
+          </>
+        )}
       </div>
-    </div>
+    </main>
   );
 }
 
