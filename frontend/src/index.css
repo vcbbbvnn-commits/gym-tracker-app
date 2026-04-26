@@ -8,14 +8,14 @@
    ROOT VARIABLES
    ============================================= */
 :root {
-  --signal: #a3e635;
-  --aqua: #22d3ee;
-  --violet: #8b5cf6;
-  --coral: #fb7185;
-  --void: #07090d;
-  --carbon: #0d1117;
-  --iron: #141a22;
-  --steel: #202833;
+  --fire: #fb6b1d;
+  --ember: #d85a24;
+  --blaze: #ff9a3d;
+  --gold: #f6b647;
+  --void: #090d14;
+  --carbon: #101722;
+  --iron: #161f2b;
+  --steel: #273241;
 }
 
 /* =============================================
@@ -31,7 +31,7 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #07090d;
+  background-color: #090d14;
   color: #e5e7eb;
   min-height: 100vh;
   overflow-x: hidden;
@@ -45,12 +45,10 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-    radial-gradient(ellipse 70% 45% at 15% 10%, rgba(34, 211, 238, 0.09) 0%, transparent 55%),
-    radial-gradient(ellipse 65% 45% at 88% 14%, rgba(163, 230, 53, 0.08) 0%, transparent 58%),
-    linear-gradient(180deg, #07090d 0%, #0d1117 100%);
-  background-size: 42px 42px, 42px 42px, auto, auto, auto;
+    radial-gradient(ellipse 80% 60% at 12% 8%, rgba(251, 107, 29, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 20%, rgba(45, 75, 110, 0.22) 0%, transparent 58%),
+    linear-gradient(180deg, #0b111b 0%, #101722 55%, #090d14 100%);
+  background-size: auto;
   pointer-events: none;
   z-index: 0;
 }
@@ -75,7 +73,7 @@ body::before {
 .particle {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(34,211,238,0.45) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(251,107,29,0.52) 0%, transparent 70%);
   animation: floatParticle linear infinite;
   will-change: transform;
 }
@@ -101,8 +99,8 @@ body::before {
 }
 
 .glass-panel:hover {
-  border-color: rgba(34,211,238,0.28);
-  box-shadow: 0 22px 54px rgba(0,0,0,0.58), 0 0 36px rgba(34,211,238,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(251,107,29,0.28);
+  box-shadow: 0 22px 54px rgba(0,0,0,0.58), 0 0 36px rgba(251,107,29,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
   transform: translateY(-2px);
 }
 
@@ -125,8 +123,8 @@ body::before {
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: linear-gradient(135deg, #a3e635 0%, #22d3ee 100%);
-  color: #071014;
+  background: linear-gradient(135deg, #ff7a1a 0%, #f45112 100%);
+  color: white;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.05em;
@@ -136,7 +134,7 @@ body::before {
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 28px rgba(34,211,238,0.18);
+  box-shadow: 0 12px 30px rgba(251,107,29,0.35);
   text-transform: uppercase;
 }
 
@@ -151,7 +149,7 @@ body::before {
 
 .btn-fire:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 14px 34px rgba(163,230,53,0.2), 0 0 54px rgba(34,211,238,0.15);
+  box-shadow: 0 14px 34px rgba(251,107,29,0.48), 0 0 54px rgba(251,107,29,0.18);
 }
 
 .btn-fire:hover::before {
@@ -184,8 +182,8 @@ body::before {
 
 .btn-ghost:hover {
   background: rgba(255,255,255,0.1);
-  border-color: rgba(34,211,238,0.35);
-  color: #67e8f9;
+  border-color: rgba(251,107,29,0.34);
+  color: #f7b07c;
   transform: translateY(-2px);
 }
 
@@ -206,9 +204,9 @@ body::before {
 }
 
 .input-field:focus {
-  border-color: rgba(34,211,238,0.62);
+  border-color: rgba(251,107,29,0.62);
   background: rgba(0,0,0,0.5);
-  box-shadow: 0 0 0 3px rgba(34,211,238,0.1), 0 0 20px rgba(163,230,53,0.08);
+  box-shadow: 0 0 0 3px rgba(251,107,29,0.12), 0 0 20px rgba(251,107,29,0.1);
 }
 
 .input-field::placeholder {
@@ -219,16 +217,16 @@ body::before {
    STAT CARD
    ============================================= */
 .stat-card {
-  background: linear-gradient(135deg, rgba(34,211,238,0.09) 0%, rgba(163,230,53,0.035) 100%);
-  border: 1px solid rgba(34,211,238,0.18);
+  background: linear-gradient(135deg, rgba(251,107,29,0.1) 0%, rgba(251,107,29,0.035) 100%);
+  border: 1px solid rgba(251,107,29,0.2);
   border-radius: 14px;
   padding: 20px 24px;
   transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  border-color: rgba(163,230,53,0.38);
-  box-shadow: 0 8px 32px rgba(34,211,238,0.13);
+  border-color: rgba(251,107,29,0.38);
+  box-shadow: 0 8px 32px rgba(251,107,29,0.14);
   transform: translateY(-3px);
 }
 
@@ -252,16 +250,16 @@ body::before {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, #a3e635 0%, #22d3ee 100%);
+  background: linear-gradient(180deg, #ff7a1a 0%, #d85a24 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .workout-card:hover {
-  border-color: rgba(34,211,238,0.3);
-  background: linear-gradient(135deg, rgba(34,211,238,0.07) 0%, rgba(255,255,255,0.02) 100%);
+  border-color: rgba(251,107,29,0.3);
+  background: linear-gradient(135deg, rgba(251,107,29,0.08) 0%, rgba(255,255,255,0.02) 100%);
   transform: translateY(-3px);
-  box-shadow: 0 18px 44px rgba(0,0,0,0.45), 0 0 28px rgba(34,211,238,0.1);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.45), 0 0 28px rgba(251,107,29,0.1);
 }
 
 .workout-card:hover::before {
@@ -276,10 +274,10 @@ body::before {
   align-items: center;
   gap: 6px;
   padding: 5px 14px;
-  background: rgba(34,211,238,0.09);
-  border: 1px solid rgba(34,211,238,0.25);
-  border-radius: 999px;
-  color: #67e8f9;
+  background: linear-gradient(135deg, rgba(255,122,26,0.95) 0%, rgba(244,81,18,0.95) 100%);
+  border: 1px solid rgba(255,154,61,0.45);
+  border-radius: 8px;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -291,7 +289,7 @@ body::before {
    ============================================= */
 .fire-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(34,211,238,0.36) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(251,107,29,0.4) 50%, transparent 100%);
 }
 
 /* =============================================
@@ -317,9 +315,9 @@ body::before {
 }
 
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(34,211,238,0.16) 0%, rgba(163,230,53,0.08) 100%);
-  color: #67e8f9;
-  border: 1px solid rgba(34,211,238,0.28);
+  background: linear-gradient(135deg, rgba(251,107,29,0.22) 0%, rgba(216,90,36,0.12) 100%);
+  color: #f7a66f;
+  border: 1px solid rgba(251,107,29,0.32);
 }
 
 /* =============================================
@@ -334,7 +332,7 @@ body::before {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #22d3ee 0%, #a3e635 100%);
+  background: linear-gradient(90deg, #ff7a1a 0%, #f6b647 100%);
   border-radius: 2px;
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -347,23 +345,23 @@ body::before {
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090d;
+  background: #090d14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(34,211,238,0.28);
+  background: rgba(251,107,29,0.32);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(163,230,53,0.42);
+  background: rgba(251,107,29,0.52);
 }
 
 /* =============================================
    SELECT STYLING
    ============================================= */
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2322d3ee' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fb6b1d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   -webkit-appearance: none;
@@ -390,14 +388,14 @@ select option {
    TEXT EFFECTS
    ============================================= */
 .gradient-text {
-  background: linear-gradient(135deg, #67e8f9 0%, #a3e635 100%);
+  background: linear-gradient(135deg, #ff7a1a 0%, #f6b647 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .fire-text {
-  background: linear-gradient(135deg, #67e8f9 0%, #a3e635 55%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #ff7a1a 0%, #f6b647 55%, #ff9a3d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -411,12 +409,12 @@ select option {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   background: rgba(7,9,13,0.84);
-  border: 1px solid rgba(34,211,238,0.18);
+  border: 1px solid rgba(251,107,29,0.24);
   border-radius: 14px;
   padding: 14px 20px;
   animation: float 6s ease-in-out infinite;
   will-change: transform;
-  box-shadow: 0 10px 34px rgba(0,0,0,0.42), 0 0 20px rgba(34,211,238,0.08);
+  box-shadow: 0 10px 34px rgba(0,0,0,0.42), 0 0 20px rgba(251,107,29,0.12);
 }
 
 @keyframes float {
@@ -429,7 +427,7 @@ select option {
    ============================================= */
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid rgba(34,211,238,0.62);
+  outline: 2px solid rgba(251,107,29,0.62);
   outline-offset: 3px;
   border-radius: 8px;
 }
