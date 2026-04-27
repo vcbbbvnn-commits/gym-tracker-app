@@ -103,6 +103,7 @@ def add_set(db: Session, user: User, exercise_id: int, payload: SetCreate) -> Wo
         exercise_id=exercise.id,
         reps=payload.reps,
         weight=payload.weight,
+        set_type=payload.set_type or "normal",
         performed_at=payload.performed_at or datetime.now(timezone.utc),
     )
     db.add(set_entry)
@@ -130,6 +131,8 @@ def update_set(db: Session, user: User, set_id: int, payload: SetUpdate) -> Work
         set_entry.reps = payload.reps
     if payload.weight is not None:
         set_entry.weight = payload.weight
+    if payload.set_type is not None:
+        set_entry.set_type = payload.set_type
     if payload.performed_at is not None:
         set_entry.performed_at = payload.performed_at
     db.commit()

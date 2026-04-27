@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
-from app.routes import auth, progress, workouts, templates
+from app.routes import auth, progress, workouts, templates, body_weight
 from app.services.template_service import create_workout_template
 from app.schemas.template import WorkoutTemplateCreate, TemplateExerciseCreate
 
@@ -162,6 +162,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(workouts.router, prefix="/api/workouts", tags=["workouts"])
 app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 app.include_router(templates.router, prefix="/api", tags=["templates"])
+app.include_router(body_weight.router, prefix="/api/body-weight", tags=["body-weight"])
 
 
 @app.get("/api/health", tags=["health"])

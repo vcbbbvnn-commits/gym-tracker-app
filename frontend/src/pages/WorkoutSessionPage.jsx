@@ -83,20 +83,48 @@ function RestTimer({ seconds, onDone, onSkip }) {
   );
 }
 
+/* ─── 1RM calculator (Epley formula) ────────────── */
+function calc1RM(weight, reps) {
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
+/* ─── Set Type Config ────────────────────────────── */
+const SET_TYPES = [
+  { key: "warmup",  label: "W",  full: "Warmup",  color: "#ffd60a" },
+  { key: "normal",  label: "N",  full: "Working", color: "#30d158" },
+  { key: "drop",    label: "D",  full: "Drop",    color: "#bf5af2" },
+  { key: "failure", label: "F",  full: "Failure", color: "#ff375f" },
+];
+
 /* ─── ExerciseCard ──────────────────────────────── */
 function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAddSet, onDeleteSet, index, onSetLogged }) {
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
+  const [setType, setSetType] = useState("normal");
   const [logging, setLogging] = useState(false);
+  const [prevSession, setPrevSession] = useState(null);
+
+  // Fetch previous session data for this exercise
+  useEffect(() => {
+    api.get(`/body-weight/last-session/${encodeURIComponent(exercise.name)}`)
+      .then(r => { if (r.data.sets?.length) setPrevSession(r.data); })
+      .catch(() => {});
+  }, [exercise.name]);
 
   const handleLog = async (e) => {
     e.preventDefault();
     if (!reps || !weight) return;
     setLogging(true);
-    await onAddSet(exercise.id, Number(reps), Number(weight));
+    await onAddSet(exercise.id, Number(reps), Number(weight), setType);
     setReps(""); setWeight(""); setLogging(false);
     if (onSetLogged) onSetLogged();
   };
+
+  // Best 1RM from logged sets
+  const best1RM = exercise.sets.length
+    ? Math.max(...exercise.sets.map(s => calc1RM(s.weight, s.reps)))
+    : null;
 
   const completedSets = exercise.sets.length;
   const notesMatch = exercise.notes?.match(/(\d+)\s*sets?\s*[×x]\s*([\d\-–]+)\s*reps?/i);
@@ -132,6 +160,11 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
                   Target: {targetSets} sets × {targetReps} reps
                 </p>
               )}
+              {best1RM && (
+                <p className="text-xs mt-0.5 font-bold" style={{ color: "#ffd60a" }}>
+                  🏆 1RM ≈ {best1RM} kg
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -164,7 +197,35 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
           </div>
         )}
 
-        {/* Log set form */}
+        {/* Previous session hint */}
+        {prevSession && (
+          <div className="mb-3 rounded-xl px-3 py-2 flex items-center gap-2"
+            style={{background:"rgba(10,132,255,0.08)",border:"0.5px solid rgba(10,132,255,0.2)"}}>
+            <span className="text-sm">📅</span>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider" style={{color:"rgba(10,132,255,0.7)"}}>Last session</p>
+              <p className="text-xs font-semibold text-white/70">
+                {prevSession.sets.filter(s=>s.set_type!=='warmup').map((s,i)=>`${s.reps}×${s.weight}kg`).join(" · ")}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Set type selector */}
+        <div className="mb-3 flex items-center gap-1.5">
+          <p className="text-[10px] uppercase tracking-wider mr-1" style={{color:"rgba(255,255,255,0.3)"}}>Set:</p>
+          {SET_TYPES.map(st => (
+            <button key={st.key} type="button" onClick={()=>setSetType(st.key)}
+              className="rounded-lg px-2.5 py-1 text-[11px] font-black transition"
+              style={setType===st.key
+                ?{background:st.color,color:"#000"}
+                :{background:"rgba(255,255,255,0.05)",color:"rgba(255,255,255,0.4)"}}>
+              {st.full}
+            </button>
+          ))}
+        </div>
+
+        {/* Log set form */}}
         <form onSubmit={handleLog} className="mb-4 flex gap-2">
           <input
             type="number"
@@ -276,8 +337,9 @@ function WorkoutSessionPage() {
   const [isActive, setIsActive] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [addExName, setAddExName] = useState("");
-  const [restTimer, setRestTimer] = useState(null); // null | number (seconds)
+  const [restTimer, setRestTimer] = useState(null);
   const [restDuration, setRestDuration] = useState(90);
+  const [showSummary, setShowSummary] = useState(false);
   const intervalRef = useRef(null);
 
   /* Load workout */
@@ -333,9 +395,9 @@ function WorkoutSessionPage() {
     }
   };
 
-  const handleAddSet = async (exerciseId, reps, weight) => {
+  const handleAddSet = async (exerciseId, reps, weight, set_type = "normal") => {
     try {
-      const { data } = await api.post(`/workouts/exercises/${exerciseId}/sets`, { reps, weight });
+      const { data } = await api.post(`/workouts/exercises/${exerciseId}/sets`, { reps, weight, set_type });
       setWorkout(data);
     } catch (err) {
       setError(err.response?.data?.detail || "Unable to log set.");
@@ -580,45 +642,87 @@ function WorkoutSessionPage() {
           )}
         </div>
 
-        {/* ── Add Exercise ── */}
-        <div
-          className="rounded-2xl p-4"
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
-          }}
-        >
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
-            + Add Exercise
-          </p>
-          <form onSubmit={handleAddExercise} className="flex gap-3">
-            <input
-              value={addExName}
-              onChange={(e) => setAddExName(e.target.value)}
-              placeholder="Exercise name…"
-              required
-              className="flex-1 rounded-xl border px-4 py-3 text-sm text-white outline-none transition-all placeholder-gray-600"
-              style={{ background: "rgba(0,0,0,0.4)", borderColor: "rgba(255,255,255,0.1)" }}
-              onFocus={(e) => (e.target.style.borderColor = cfg.color + "80")}
-              onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-            />
-            <button
-              type="submit"
-              className="rounded-xl px-5 py-3 text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
-              style={{
-                background: `linear-gradient(135deg, ${cfg.color} 0%, ${cfg.color}bb 100%)`,
-                color: "#000",
-                boxShadow: `0 4px 12px ${cfg.color}40`,
-              }}
-            >
-              Add
-            </button>
-          </form>
-        </div>
+        {/* ── Finish Workout Button ── */}
+        {totalSets > 0 && (
+          <button
+            type="button"
+            onClick={() => { setIsActive(false); setShowSummary(true); }}
+            className="w-full rounded-2xl py-4 text-base font-black uppercase tracking-widest transition active:scale-95"
+            style={{ background: "linear-gradient(135deg,#30d158,#0a84ff)", color: "#000", boxShadow: "0 8px 24px rgba(48,209,88,0.35)" }}
+          >
+            🏁 Finish Workout
+          </button>
+        )}
 
       </div>
     </div>
+
+    {/* ── Workout Summary Modal ── */}
+    {showSummary && workout && (
+      <div className="fixed inset-0 z-50 flex items-end justify-center"
+        style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)" }}>
+        <div className="w-full max-w-lg rounded-t-3xl p-8 ios-slide-up"
+          style={{ background: "#1c1c1e", border: "0.5px solid rgba(255,255,255,0.12)" }}>
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-3">🏆</div>
+            <h2 className="text-3xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+              Workout Complete!
+            </h2>
+            <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {workout.name}
+            </p>
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { icon: "⏱️", label: "Duration", value: formatTime(elapsed) },
+              { icon: "📊", label: "Total Sets", value: totalSets },
+              { icon: "⚖️", label: "Volume", value: `${Math.round(totalVolume).toLocaleString()} kg` },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl p-4 text-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                <p className="text-2xl mb-1">{s.icon}</p>
+                <p className="text-lg font-black text-white">{s.value}</p>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* PRs broken */}
+          {workout.exercises.map(ex => {
+            const pr = ex.sets.length
+              ? Math.max(...ex.sets.map(s => calc1RM(s.weight, s.reps)))
+              : 0;
+            if (!pr) return null;
+            return (
+              <div key={ex.id} className="pr-banner flex items-center gap-3 mb-2">
+                <span>🏅</span>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider" style={{ color: "#ffd60a" }}>Est. 1RM</p>
+                  <p className="text-sm font-bold text-white">{ex.name} — {pr} kg</p>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="mt-6 flex gap-3">
+            <button type="button" onClick={() => setShowSummary(false)}
+              className="flex-1 rounded-2xl py-4 text-sm font-bold"
+              style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}>
+              Keep Editing
+            </button>
+            <Link to="/sessions"
+              className="flex-1 rounded-2xl py-4 text-sm font-black text-center text-black"
+              style={{ background: "linear-gradient(135deg,#30d158,#0a84ff)", boxShadow: "0 4px 16px rgba(48,209,88,0.35)" }}>
+              Done ✓
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
 
 export default WorkoutSessionPage;
+

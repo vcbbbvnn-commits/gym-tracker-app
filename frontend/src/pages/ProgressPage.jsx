@@ -1,42 +1,65 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/client";
+
+/* ── Inline SVG line chart ─────────────────────────── */
+function LineChart({ data, color = "#ff6b00", height = 80 }) {
+  if (!data.length) return null;
+  const max = Math.max(...data.map(d => d.value), 1);
+  const w = 300; const h = height;
+  const pts = data.map((d, i) => {
+    const x = (i / (data.length - 1 || 1)) * w;
+    const y = h - (d.value / max) * (h - 10) - 5;
+    return `${x},${y}`;
+  }).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height }}>
+      <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round"
+        strokeLinejoin="round" points={pts} />
+      {data.map((d, i) => {
+        const x = (i / (data.length - 1 || 1)) * w;
+        const y = h - (d.value / max) * (h - 10) - 5;
+        return <circle key={i} cx={x} cy={y} r="4" fill={color} />;
+      })}
+    </svg>
+  );
+}
+
+/* ── Bar chart for weekly volume ─────────────────────── */
+function BarChart({ data, color = "#ff6b00" }) {
+  if (!data.length) return null;
+  const max = Math.max(...data.map(d => d.volume), 1);
+  return (
+    <div className="flex items-end gap-1.5 h-24">
+      {data.map((d, i) => {
+        const pct = (d.volume / max) * 100;
+        const label = d.week.split("-W")[1] ? `W${d.week.split("-W")[1]}` : d.week;
+        return (
+          <div key={i} className="flex flex-1 flex-col items-center gap-1">
+            <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+              {Math.round(d.volume / 1000)}k
+            </p>
+            <div className="w-full rounded-t-lg transition-all duration-700"
+              style={{ height: `${Math.max(pct, 5)}%`, background: i === data.length - 1 ? color : `${color}55` }} />
+            <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function StatCard({ label, value, icon, color, delay }) {
   return (
     <div
-      className="animate-fade-up rounded-2xl p-5 transition-all duration-500 hover:-translate-y-2"
-      style={{
-        background: `linear-gradient(135deg, ${color}12 0%, ${color}05 100%)`,
-        border: `1px solid ${color}25`,
-        animationDelay: delay,
-        opacity: 0,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = `0 12px 40px ${color}20`;
-        e.currentTarget.style.borderColor = `${color}45`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.borderColor = `${color}25`;
-      }}
+      className="ios-slide-up rounded-2xl p-5"
+      style={{ background: "#1c1c1e", animationDelay: delay }}
     >
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{label}</span>
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
         <span className="text-xl">{icon}</span>
       </div>
-      <p
-        className="text-3xl font-bold"
-        style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          background: `linear-gradient(135deg, ${color} 0%, ${color}bb 100%)`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-        }}
-      >
-        {value}
-      </p>
+      <p className="text-3xl font-black" style={{ color }}>{value}</p>
     </div>
   );
 }
@@ -45,20 +68,28 @@ function ProgressPage() {
   const [summary, setSummary] = useState(null);
   const [exerciseProgress, setExerciseProgress] = useState([]);
   const [history, setHistory] = useState([]);
+  const [bodyWeights, setBodyWeights] = useState([]);
+  const [weeklyVolume, setWeeklyVolume] = useState([]);
+  const [newWeight, setNewWeight] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const loadProgress = async () => {
       try {
-        const [summaryRes, exercisesRes, historyRes] = await Promise.all([
+        const [summaryRes, exercisesRes, historyRes, bwRes, volRes] = await Promise.all([
           api.get("/progress/summary"),
           api.get("/progress/exercises"),
           api.get("/progress/history"),
+          api.get("/body-weight").catch(() => ({ data: [] })),
+          api.get("/body-weight/volume/weekly").catch(() => ({ data: [] })),
         ]);
         setSummary(summaryRes.data);
         setExerciseProgress(exercisesRes.data);
         setHistory(historyRes.data);
+        setBodyWeights(bwRes.data);
+        setWeeklyVolume(volRes.data);
       } catch (requestError) {
         setError(requestError.response?.data?.detail || "Unable to load progress data.");
       } finally {
@@ -68,46 +99,52 @@ function ProgressPage() {
     loadProgress();
   }, []);
 
+  const logBodyWeight = async (e) => {
+    e.preventDefault();
+    if (!newWeight) return;
+    try {
+      await api.post("/body-weight", { weight_kg: parseFloat(newWeight) });
+      setNewWeight("");
+      const { data } = await api.get("/body-weight");
+      setBodyWeights(data);
+    } catch {}
+  };
+
+
+
   const stats = [
-    { label: "Total Workouts", value: summary?.total_workouts ?? 0, icon: "🏋️", color: "#22d3ee", delay: "0ms" },
-    { label: "Total Exercises", value: summary?.total_exercises ?? 0, icon: "💪", color: "#8b5cf6", delay: "80ms" },
-    { label: "Total Sets", value: summary?.total_sets ?? 0, icon: "🔢", color: "#a3e635", delay: "160ms" },
-    { label: "Volume (kg)", value: summary?.total_volume ?? 0, icon: "⚖️", color: "#67e8f9", delay: "240ms" },
+    { label: "Total Workouts", value: summary?.total_workouts ?? 0, icon: "🏋️", color: "#ff6b00", delay: "0ms" },
+    { label: "Total Exercises", value: summary?.total_exercises ?? 0, icon: "💪", color: "#bf5af2", delay: "80ms" },
+    { label: "Total Sets", value: summary?.total_sets ?? 0, icon: "🔢", color: "#30d158", delay: "160ms" },
+    { label: "Volume (kg)", value: (summary?.total_volume ?? 0).toLocaleString(), icon: "⚖️", color: "#0a84ff", delay: "240ms" },
   ];
+
+  const latestWeight = bodyWeights.length ? bodyWeights[bodyWeights.length - 1].weight_kg : null;
+  const bwChartData = bodyWeights.slice(-14).map(b => ({ value: b.weight_kg, label: new Date(b.logged_at).toLocaleDateString() }));
 
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="animate-fade-up" style={{ opacity: 0 }}>
+      <div className="ios-slide-up">
         <span className="section-badge mb-3 inline-flex">Analytics</span>
-        <h1
-          className="text-4xl font-bold text-white"
-          style={{ fontFamily: "'Bebas Neue', 'Space Grotesk', sans-serif", letterSpacing: "0.04em" }}
-        >
-          YOUR PROGRESS
+        <h1 className="text-5xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+          Your Progress
         </h1>
-        <p className="mt-2 text-gray-500">
-          Track volume, best lifts, and your workout history.
+        <p className="mt-2 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+          Track volume, body weight, 1RMs, and workout history.
         </p>
       </div>
 
       {error && (
-        <div
-          className="rounded-2xl px-5 py-4 text-sm"
-          style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}
-        >
+        <div className="rounded-2xl px-5 py-4 text-sm"
+          style={{ background: "rgba(255,69,58,0.1)", border: "1px solid rgba(255,69,58,0.2)", color: "#ff453a" }}>
           {error}
         </div>
       )}
 
       {/* Stats Grid */}
       <section>
-        <h2
-          className="mb-4 text-lg font-semibold text-white"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          Overview
-        </h2>
+        <h2 className="mb-4 text-lg font-black text-white">Overview</h2>
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
@@ -119,10 +156,52 @@ function ProgressPage() {
         )}
       </section>
 
+      {/* Weekly Volume + Body Weight row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+
+        {/* Weekly Volume Bar Chart */}
+        <section className="rounded-2xl p-6" style={{ background: "#1c1c1e" }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,107,0,0.7)" }}>Volume Trend</p>
+              <h2 className="text-lg font-black text-white">Weekly Volume</h2>
+            </div>
+            <span className="text-2xl">📊</span>
+          </div>
+          {weeklyVolume.length > 0
+            ? <BarChart data={weeklyVolume} color="#ff6b00" />
+            : <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.3)" }}>No data yet — log some sets first.</p>}
+        </section>
+
+        {/* Body Weight Tracker */}
+        <section className="rounded-2xl p-6" style={{ background: "#1c1c1e" }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(48,209,88,0.7)" }}>Trend</p>
+              <h2 className="text-lg font-black text-white">
+                Body Weight {latestWeight ? <span style={{ color: "#30d158" }}>{latestWeight} kg</span> : ""}
+              </h2>
+            </div>
+            <span className="text-2xl">⚖️</span>
+          </div>
+          {bwChartData.length > 1
+            ? <LineChart data={bwChartData} color="#30d158" height={80} />
+            : <p className="text-sm italic mb-4" style={{ color: "rgba(255,255,255,0.3)" }}>No entries yet — log your weight below.</p>}
+          <form onSubmit={logBodyWeight} className="flex gap-2 mt-4">
+            <input type="number" step="0.1" min="30" max="300" value={newWeight}
+              onChange={e => setNewWeight(e.target.value)}
+              placeholder="Your weight in kg…"
+              className="input-field flex-1" required />
+            <button type="submit" className="btn-fire px-5 py-2.5 text-sm">Log</button>
+          </form>
+        </section>
+      </div>
+
       {/* Main Content */}
       <div className="grid gap-6 xl:grid-cols-2">
         {/* Exercise Progress */}
         <section
+
           className="animate-fade-up rounded-3xl p-8"
           style={{
             background: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",

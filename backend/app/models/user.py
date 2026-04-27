@@ -20,3 +20,8 @@ class User(Base):
         cascade="all, delete-orphan",
         order_by="Workout.created_at.desc()",
     )
+    body_weights: Mapped[list["BodyWeight"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="BodyWeight.logged_at.desc()",
+    )
