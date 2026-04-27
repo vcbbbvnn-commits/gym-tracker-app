@@ -2,10 +2,11 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_LINKS = [
-  { to: "/",          label: "Home",      icon: "⚡" },
-  { to: "/sessions",  label: "Sessions",  icon: "🏋️" },
-  { to: "/templates", label: "Programs",  icon: "📋" },
-  { to: "/progress",  label: "Progress",  icon: "📈" },
+  { to: "/",           label: "Home",      icon: "⚡" },
+  { to: "/sessions",   label: "Sessions",  icon: "🏋️" },
+  { to: "/templates",  label: "Programs",  icon: "📋" },
+  { to: "/exercises",  label: "Exercises", icon: "🗂️" },
+  { to: "/progress",   label: "Progress",  icon: "📈" },
 ];
 
 function Layout() {

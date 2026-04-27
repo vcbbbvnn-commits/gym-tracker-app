@@ -143,3 +143,35 @@ def get_weekly_comparison(db: Session, user: User, exercise_name: str) -> dict:
             "volume_change_percent": get_change(current["total_volume"], previous["total_volume"]),
         },
     }
+
+
+def get_exercise_history(db: Session, user: User, exercise_name: str) -> list[dict]:
+    """Get all historical data points for a specific exercise."""
+    from sqlalchemy import func
+    
+    # Get all sets for this exercise, group by day to get best weight and total volume
+    results = (
+        db.query(
+            func.date(SetEntry.performed_at).label("date"),
+            func.max(SetEntry.weight).label("best_weight"),
+            func.sum(SetEntry.weight * SetEntry.reps).label("total_volume"),
+        )
+        .join(Exercise, SetEntry.exercise_id == Exercise.id)
+        .join(Workout, Exercise.workout_id == Workout.id)
+        .filter(
+            Workout.user_id == user.id,
+            Exercise.name == exercise_name,
+        )
+        .group_by(func.date(SetEntry.performed_at))
+        .order_by(func.date(SetEntry.performed_at).asc())
+        .all()
+    )
+    
+    return [
+        {
+            "date": row.date.isoformat(),
+            "best_weight": float(row.best_weight),
+            "total_volume": float(row.total_volume),
+        }
+        for row in results
+    ]

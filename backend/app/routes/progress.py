@@ -38,3 +38,14 @@ def weekly_comparison(
 @router.get("/history", response_model=list[WorkoutRead])
 def history(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[WorkoutRead]:
     return list_workouts(db, current_user)
+
+
+@router.get("/history/{exercise_name}")
+def exercise_history(
+    exercise_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all historical data points for a specific exercise."""
+    from app.services.progress_service import get_exercise_history
+    return get_exercise_history(db, current_user, exercise_name)

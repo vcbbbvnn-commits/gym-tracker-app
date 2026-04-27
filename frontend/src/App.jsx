@@ -1,4 +1,4 @@
-// Version 1.0.1 - Build Trigger
+// Version 1.0.2 - Exercise Library
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -10,6 +10,7 @@ import ProgressPage from "./pages/ProgressPage";
 import ProgressDetailPage from "./pages/ProgressDetailPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import TemplatesPage from "./pages/TemplatesPage";
+import ExerciseLibraryPage from "./pages/ExerciseLibraryPage";
 
 function App() {
   const { token } = useAuth();
@@ -30,6 +31,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
+        <Route path="/exercises" element={<ExerciseLibraryPage />} />
         <Route path="/workouts/:workoutId" element={<WorkoutSessionPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/progress/:exerciseName" element={<ProgressDetailPage />} />

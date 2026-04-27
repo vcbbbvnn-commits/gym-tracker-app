@@ -97,6 +97,125 @@ const SET_TYPES = [
   { key: "failure", label: "F",  full: "Failure", color: "#ff375f" },
 ];
 
+/* ─── Plate Calculator ───────────────────────────── */
+const PLATE_WEIGHTS = [25, 20, 15, 10, 5, 2.5, 1.25];
+const PLATE_COLORS  = {
+  25: "#ff375f", 20: "#0a84ff", 15: "#ffd60a",
+  10: "#30d158", 5: "#bf5af2", 2.5: "#ff9500", 1.25: "#8e8e93",
+};
+
+function calcPlates(targetKg, barKg) {
+  let remaining = (targetKg - barKg) / 2;
+  const result = [];
+  for (const plate of PLATE_WEIGHTS) {
+    const count = Math.floor(remaining / plate);
+    if (count > 0) { result.push({ plate, count }); remaining -= count * plate; }
+  }
+  return result;
+}
+
+function PlateCalculator({ onClose }) {
+  const [target, setTarget] = useState("100");
+  const [bar, setBar] = useState("20");
+  const targetKg = parseFloat(target) || 0;
+  const barKg    = parseFloat(bar)    || 20;
+  const valid    = targetKg >= barKg;
+  const plates   = valid ? calcPlates(targetKg, barKg) : [];
+  const totalCheck = barKg + plates.reduce((s, { plate, count }) => s + plate * count * 2, 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)" }}
+      onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl p-6 ios-slide-up"
+        style={{ background: "#1c1c1e", border: "0.5px solid rgba(255,255,255,0.12)" }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="text-xl font-black text-white">🧮 Plate Calculator</h3>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Plates per side shown below</p>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-xl">✕</button>
+        </div>
+
+        {/* Inputs */}
+        <div className="flex gap-3 mb-5">
+          <div className="flex-1">
+            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>Target Weight (kg)</p>
+            <input type="number" value={target} onChange={e => setTarget(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 text-lg font-black text-white outline-none"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,0,0.5)" }} />
+          </div>
+          <div className="w-28">
+            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>Bar (kg)</p>
+            <select value={bar} onChange={e => setBar(e.target.value)}
+              className="w-full rounded-xl px-3 py-3 text-sm font-bold text-white outline-none"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <option value="20">20 kg</option>
+              <option value="15">15 kg</option>
+              <option value="10">10 kg</option>
+            </select>
+          </div>
+        </div>
+
+        {!valid && <p className="text-sm text-center mb-4" style={{ color: "#ff453a" }}>Target must be ≥ bar weight</p>}
+
+        {/* Plate visualization */}
+        {valid && plates.length > 0 && (
+          <div className="mb-5">
+            <div className="flex items-center justify-center gap-1 mb-3">
+              {/* Bar center */}
+              <div className="h-4 w-16 rounded-full" style={{ background: "#8e8e93" }} />
+              {/* Plates stacked outward */}
+              {plates.map(({ plate, count }) =>
+                Array.from({ length: count }).map((_, i) => (
+                  <div key={`${plate}-${i}`}
+                    className="rounded-sm flex items-center justify-center text-[8px] font-black"
+                    style={{
+                      width: "18px",
+                      height: `${Math.max(24, plate * 2.2)}px`,
+                      background: PLATE_COLORS[plate] || "#666",
+                      color: "#000",
+                    }}>
+                    {plate}
+                  </div>
+                ))
+              )}
+              <div className="h-3 w-6 rounded-full" style={{ background: "#8e8e93" }} />
+            </div>
+
+            {/* Text summary */}
+            <div className="rounded-xl p-4 space-y-2" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Each Side
+              </p>
+              {plates.map(({ plate, count }) => (
+                <div key={plate} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-sm" style={{ background: PLATE_COLORS[plate] }} />
+                    <span className="text-sm text-white font-bold">{plate} kg</span>
+                  </div>
+                  <span className="text-sm font-black" style={{ color: PLATE_COLORS[plate] }}>× {count}</span>
+                </div>
+              ))}
+              <div className="pt-2 border-t border-white/10 flex justify-between">
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Total on bar</span>
+                <span className="text-sm font-black" style={{ color: "#ff6b00" }}>{totalCheck} kg</span>
+              </div>
+            </div>
+          </div>
+        )}
+        {valid && plates.length === 0 && (
+          <p className="text-center text-sm mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>
+            No plates needed — just the bar ({barKg} kg)
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 /* ─── ExerciseCard ──────────────────────────────── */
 function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAddSet, onDeleteSet, index, onSetLogged }) {
   const [reps, setReps] = useState("");
@@ -198,18 +317,44 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
         )}
 
         {/* Previous session hint */}
-        {prevSession && (
-          <div className="mb-3 rounded-xl px-3 py-2 flex items-center gap-2"
-            style={{background:"rgba(10,132,255,0.08)",border:"0.5px solid rgba(10,132,255,0.2)"}}>
-            <span className="text-sm">📅</span>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider" style={{color:"rgba(10,132,255,0.7)"}}>Last session</p>
-              <p className="text-xs font-semibold text-white/70">
-                {prevSession.sets.filter(s=>s.set_type!=='warmup').map((s,i)=>`${s.reps}×${s.weight}kg`).join(" · ")}
-              </p>
-            </div>
-          </div>
-        )}
+        {prevSession && (() => {
+          const workingSets = prevSession.sets.filter(s => s.set_type !== "warmup");
+          const bestSet = workingSets.reduce((b, s) => s.weight > (b?.weight || 0) ? s : b, null);
+          // Progressive overload: if hit ≥ 10 reps at top weight → suggest +2.5kg
+          const suggestIncrease = bestSet && bestSet.reps >= 10;
+          const suggestedWeight = bestSet ? bestSet.weight + 2.5 : null;
+          return (
+            <>
+              <div className="mb-2 rounded-xl px-3 py-2 flex items-center gap-2"
+                style={{background:"rgba(10,132,255,0.08)",border:"0.5px solid rgba(10,132,255,0.2)"}}>
+                <span className="text-sm">📅</span>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider" style={{color:"rgba(10,132,255,0.7)"}}>Last session</p>
+                  <p className="text-xs font-semibold text-white/70">
+                    {workingSets.map(s => `${s.reps}×${s.weight}kg`).join(" · ")}
+                  </p>
+                </div>
+              </div>
+              {suggestIncrease && suggestedWeight && (
+                <div className="mb-3 rounded-xl px-3 py-2 flex items-center gap-2"
+                  style={{background:"rgba(48,209,88,0.08)",border:"0.5px solid rgba(48,209,88,0.25)"}}>
+                  <span className="text-sm">🤖</span>
+                  <div className="flex-1">
+                    <p className="text-[10px] uppercase tracking-wider" style={{color:"rgba(48,209,88,0.8)"}}>Progressive Overload</p>
+                    <p className="text-xs font-semibold" style={{color:"rgba(255,255,255,0.8)"}}>
+                      Hit {bestSet.reps} reps last time → Try <span style={{color:"#30d158",fontWeight:900}}>{suggestedWeight} kg</span> today 💪
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setWeight(String(suggestedWeight))}
+                    className="rounded-lg px-2.5 py-1 text-[11px] font-black"
+                    style={{background:"rgba(48,209,88,0.2)",color:"#30d158"}}>
+                    Use
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* Set type selector */}
         <div className="mb-3 flex items-center gap-1.5">
@@ -340,7 +485,9 @@ function WorkoutSessionPage() {
   const [restTimer, setRestTimer] = useState(null);
   const [restDuration, setRestDuration] = useState(90);
   const [showSummary, setShowSummary] = useState(false);
+  const [showPlates, setShowPlates] = useState(false);
   const intervalRef = useRef(null);
+
 
   /* Load workout */
   const loadWorkout = async () => {
@@ -474,18 +621,31 @@ function WorkoutSessionPage() {
               >
                 ← Programs
               </Link>
-              {dayLabel && (
-                <span
-                  className="rounded-full px-4 py-1 text-xs font-black uppercase tracking-widest"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowPlates(true)}
+                  className="rounded-full px-4 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 transition active:scale-95"
                   style={{
-                    background: cfg.bg,
-                    border: `1px solid ${cfg.border}`,
-                    color: cfg.color,
+                    background: "rgba(255,107,0,0.15)",
+                    border: "1px solid rgba(255,107,0,0.3)",
+                    color: "#ff6b00",
                   }}
                 >
-                  {dayLabel}
-                </span>
-              )}
+                  🧮 Plate Calc
+                </button>
+                {dayLabel && (
+                  <span
+                    className="rounded-full px-4 py-1 text-xs font-black uppercase tracking-widest"
+                    style={{
+                      background: cfg.bg,
+                      border: `1px solid ${cfg.border}`,
+                      color: cfg.color,
+                    }}
+                  >
+                    {dayLabel}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Focus icon + name */}
@@ -656,6 +816,9 @@ function WorkoutSessionPage() {
 
       </div>
     </div>
+
+    {/* ── Plate Calculator Modal ── */}
+    {showPlates && <PlateCalculator onClose={() => setShowPlates(false)} />}
 
     {/* ── Workout Summary Modal ── */}
     {showSummary && workout && (
