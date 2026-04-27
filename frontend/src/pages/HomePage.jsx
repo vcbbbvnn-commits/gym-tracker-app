@@ -102,9 +102,21 @@ function HomePage() {
             Every Day
           </h1>
 
-          <p className="mt-5 max-w-lg text-base leading-7" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Track every set, crush every PR, and follow elite training programs — all in one premium app.
+          <p className="mb-10 max-w-md text-base font-medium leading-relaxed text-white/50 md:text-lg">
+            Track every set, crush every PR, and follow elite training programs
+            — all in one premium app.
           </p>
+
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <Link to="/templates" className="btn-fire group flex items-center justify-center gap-2 px-8 py-4 text-base font-black uppercase tracking-widest">
+              <span>Start Training</span>
+              <span className="transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+            <Link to="/exercises" className="flex items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-black uppercase tracking-widest text-white transition hover:bg-white/10"
+              style={{ borderColor: "rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", backdropFilter: "blur(20px)" }}>
+              <span>🔍 Search Exercises</span>
+            </Link>
+          </div>
 
           {/* Activity Rings */}
           <div className="mt-10 flex items-center gap-8 rounded-2xl p-5 w-fit"
