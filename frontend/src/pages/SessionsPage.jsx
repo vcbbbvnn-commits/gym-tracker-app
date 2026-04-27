@@ -24,9 +24,7 @@ function SessionsPage() {
     }
   };
 
-  useEffect(() => {
-    loadWorkouts();
-  }, []);
+  useEffect(() => { loadWorkouts(); }, []);
 
   const handleCreateWorkout = async (event) => {
     event.preventDefault();
@@ -57,37 +55,47 @@ function SessionsPage() {
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-10 text-center">
         <span className="section-badge mb-5 inline-flex px-6 py-3 text-base">Training</span>
         <h1 className="text-4xl font-black uppercase text-white md:text-5xl">Workout Sessions</h1>
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[355px_1fr]">
-        <section className="rounded-xl border border-slate-500/30 bg-[#101722]/42 p-4 shadow-2xl shadow-black/20">
+        {/* ── CREATE FORM ── */}
+        <section
+          className="rounded-2xl p-5 shadow-2xl"
+          style={{ background: "rgba(18,14,34,0.7)", border: "1px solid rgba(124,58,237,0.2)", backdropFilter: "blur(16px)" }}
+        >
           <h2 className="text-2xl font-black uppercase text-white">Create Workout</h2>
-          <p className="mt-1 text-base text-slate-400">Build your split program</p>
+          <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Build your split program</p>
 
-          <form className="mt-5 space-y-3" onSubmit={handleCreateWorkout}>
-            <div className="overflow-hidden rounded-xl border border-orange-400/60 bg-[#121a26] shadow-[0_0_28px_rgba(251,107,29,0.08)]">
+          <form className="mt-6 space-y-4" onSubmit={handleCreateWorkout}>
+            <div
+              className="overflow-hidden rounded-xl"
+              style={{ border: "1px solid rgba(124,58,237,0.4)", boxShadow: "0 0 24px rgba(124,58,237,0.1)" }}
+            >
               <select
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                className="w-full border-b border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none"
+                className="w-full px-4 py-3 text-white outline-none"
+                style={{ background: "rgba(124,58,237,0.08)", borderBottom: "1px solid rgba(124,58,237,0.2)" }}
               >
                 {workoutTemplates.map((template) => (
-                  <option key={template} value={template}>
-                    {template}
-                  </option>
+                  <option key={template} value={template}>{template}</option>
                 ))}
               </select>
 
-              <div className="m-4 flex h-28 items-center justify-center rounded-xl bg-slate-700/35">
-                <span className="text-5xl text-slate-300">🏋️</span>
+              <div
+                className="m-4 flex h-28 items-center justify-center rounded-xl"
+                style={{ background: "rgba(124,58,237,0.08)" }}
+              >
+                <span className="text-5xl">🏋️</span>
               </div>
 
               <div className="px-4 pb-4">
-                <p className="text-base text-white">{form.name} Day - Workout type selected</p>
-                <label className="mt-5 block text-sm text-slate-400" htmlFor="description">
+                <p className="text-base font-semibold text-white">{form.name} Day</p>
+                <label className="mt-4 block text-sm" style={{ color: "rgba(168,85,247,0.75)" }} htmlFor="description">
                   Notes
                 </label>
                 <textarea
@@ -96,37 +104,61 @@ function SessionsPage() {
                   placeholder="optional"
                   value={form.description}
                   onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                  className="mt-2 w-full resize-none rounded-lg border border-slate-500/40 bg-[#0d1521] px-3 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400/70"
+                  className="mt-2 w-full resize-none rounded-lg px-3 py-3 text-white outline-none transition placeholder:text-white/20"
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    border: "1px solid rgba(124,58,237,0.2)",
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.2)"; }}
                 />
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-500/40">
-              <div className="border-b border-slate-500/30 px-4 py-3 text-white">Split</div>
-              <div className="px-4 py-3 text-slate-300">{form.name}</div>
+            {/* Split display */}
+            <div
+              className="overflow-hidden rounded-xl"
+              style={{ border: "1px solid rgba(124,58,237,0.2)" }}
+            >
+              <div className="px-4 py-3 text-sm font-bold uppercase tracking-widest"
+                style={{ borderBottom: "1px solid rgba(124,58,237,0.15)", color: "rgba(168,85,247,0.7)" }}>
+                Split
+              </div>
+              <div className="px-4 py-3 text-white">{form.name}</div>
             </div>
 
-            {error && <div className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+            {error && (
+              <div className="rounded-xl px-4 py-3 text-sm"
+                style={{ background: "rgba(236,72,153,0.1)", border: "1px solid rgba(236,72,153,0.25)", color: "#f472b6" }}>
+                {error}
+              </div>
+            )}
 
             <button type="submit" disabled={submitting} className="btn-fire w-full justify-center py-3">
               {submitting ? "Creating..." : "+ Create Workout"}
             </button>
           </form>
 
-          <div className="mt-5 rounded-xl border border-orange-400/15 bg-orange-500/5 px-4 py-3">
-            <p className="text-xs text-slate-400">
+          <div
+            className="mt-5 rounded-xl px-4 py-3"
+            style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)" }}
+          >
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
               Want pre-built programs?{" "}
-              <Link to="/templates" className="font-bold text-orange-300 hover:text-orange-200">
+              <Link to="/templates" className="font-bold transition" style={{ color: "#c084fc" }}
+                onMouseEnter={e => { e.currentTarget.style.color = "#f472b6"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "#c084fc"; }}>
                 Browse Templates →
               </Link>
             </p>
           </div>
         </section>
 
+        {/* ── SESSIONS LIST ── */}
         <section>
-          <div className="mb-5">
+          <div className="mb-6">
             <h2 className="text-2xl font-black uppercase text-white">Active Sessions</h2>
-            <p className="mt-1 text-lg text-slate-400">
+            <p className="mt-1 text-sm" style={{ color: "rgba(168,85,247,0.7)" }}>
               {workouts.length} program{workouts.length !== 1 ? "s" : ""} ready
             </p>
           </div>
@@ -140,10 +172,12 @@ function SessionsPage() {
           )}
 
           {!loading && workouts.length === 0 && (
-            <div className="flex min-h-[470px] flex-col items-center justify-center text-center">
+            <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
               <div className="mb-5 text-8xl">🏋️‍♂️</div>
               <h3 className="text-4xl font-black text-white md:text-5xl">No workouts yet</h3>
-              <p className="mt-3 text-xl font-semibold text-orange-300">Create your first split on the left</p>
+              <p className="mt-3 text-lg font-semibold" style={{ color: "#c084fc" }}>
+                Create your first split on the left
+              </p>
             </div>
           )}
 
@@ -152,24 +186,34 @@ function SessionsPage() {
               {workouts.map((workout) => {
                 const setCount = workout.exercises?.reduce((total, exercise) => total + exercise.sets.length, 0) || 0;
                 return (
-                  <div key={workout.id} className="rounded-xl border border-white/10 bg-[#101722]/60 p-5">
+                  <div
+                    key={workout.id}
+                    className="workout-card"
+                  >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <h3 className="text-xl font-black text-white">{workout.name}</h3>
-                        <p className="mt-1 text-sm text-slate-400">{workout.description || "Open this session to add structure."}</p>
-                        <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-500">
+                        <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+                          {workout.description || "Open this session to add structure."}
+                        </p>
+                        <p className="mt-3 text-xs uppercase tracking-[0.18em]" style={{ color: "rgba(168,85,247,0.6)" }}>
                           {workout.exercises?.length || 0} exercises · {setCount} sets
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <Link to={`/workouts/${workout.id}`} className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white">
+                      <div className="flex gap-2 shrink-0">
+                        <Link
+                          to={`/workouts/${workout.id}`}
+                          className="rounded-xl px-4 py-2 text-sm font-bold text-white transition"
+                          style={{ background: "linear-gradient(135deg,#7c3aed,#ec4899)", boxShadow: "0 4px 14px rgba(124,58,237,0.35)" }}
+                        >
                           Open
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleDeleteWorkout(workout.id)}
                           disabled={deletingId === workout.id}
-                          className="rounded-xl border border-red-400/25 px-4 py-2 text-sm font-bold text-red-300"
+                          className="rounded-xl px-4 py-2 text-sm font-bold transition disabled:opacity-50"
+                          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.25)", color: "#f472b6" }}
                         >
                           {deletingId === workout.id ? "..." : "Delete"}
                         </button>

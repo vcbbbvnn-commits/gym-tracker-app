@@ -6,19 +6,19 @@ const DAY_NAMES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const FOCUS_CONFIG = {
-  CHEST: { emoji: "🏋️", color: "#fb6b1d", glow: "rgba(251,107,29,0.2)", muscles: ["Chest"] },
-  BACK: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back"] },
-  SHOULDERS: { emoji: "💪", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Shoulders"] },
-  LEGS: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Calves"] },
-  BICEPS: { emoji: "💪", color: "#f6b647", glow: "rgba(246,182,71,0.2)", muscles: ["Biceps"] },
-  TRICEPS: { emoji: "🔱", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Triceps"] },
-  ARMS: { emoji: "💪", color: "#fb7185", glow: "rgba(251,113,133,0.2)", muscles: ["Biceps", "Triceps"] },
-  PUSH: { emoji: "↗️", color: "#fb6b1d", glow: "rgba(251,107,29,0.2)", muscles: ["Chest", "Shoulders", "Triceps"] },
-  PULL: { emoji: "↙️", color: "#3b82f6", glow: "rgba(59,130,246,0.2)", muscles: ["Back", "Biceps", "Rear delts"] },
-  UPPER: { emoji: "🧥", color: "#a78bfa", glow: "rgba(167,139,250,0.2)", muscles: ["Chest", "Back", "Shoulders", "Arms"] },
-  LOWER: { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)", muscles: ["Quads", "Hamstrings", "Glutes", "Calves"] },
-  TRAINING: { emoji: "⚡", color: "#f6b647", glow: "rgba(246,182,71,0.2)", muscles: ["Training"] },
-  REST: { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)", muscles: ["Recovery"] },
+  CHEST:     { emoji: "🏋️", color: "#a855f7", glow: "rgba(168,85,247,0.22)",  muscles: ["Chest"] },
+  BACK:      { emoji: "↙️", color: "#818cf8", glow: "rgba(129,140,248,0.2)",  muscles: ["Back"] },
+  SHOULDERS: { emoji: "💪", color: "#c084fc", glow: "rgba(192,132,252,0.2)",  muscles: ["Shoulders"] },
+  LEGS:      { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)",   muscles: ["Quads", "Hamstrings", "Calves"] },
+  BICEPS:    { emoji: "💪", color: "#f472b6", glow: "rgba(244,114,182,0.2)",  muscles: ["Biceps"] },
+  TRICEPS:   { emoji: "🔱", color: "#ec4899", glow: "rgba(236,72,153,0.2)",   muscles: ["Triceps"] },
+  ARMS:      { emoji: "💪", color: "#ec4899", glow: "rgba(236,72,153,0.2)",   muscles: ["Biceps", "Triceps"] },
+  PUSH:      { emoji: "↗️", color: "#7c3aed", glow: "rgba(124,58,237,0.22)",  muscles: ["Chest", "Shoulders", "Triceps"] },
+  PULL:      { emoji: "↙️", color: "#818cf8", glow: "rgba(129,140,248,0.2)",  muscles: ["Back", "Biceps", "Rear delts"] },
+  UPPER:     { emoji: "🧥", color: "#a855f7", glow: "rgba(168,85,247,0.2)",   muscles: ["Chest", "Back", "Shoulders", "Arms"] },
+  LOWER:     { emoji: "🦵", color: "#34d399", glow: "rgba(52,211,153,0.2)",   muscles: ["Quads", "Hamstrings", "Glutes", "Calves"] },
+  TRAINING:  { emoji: "⚡", color: "#c084fc", glow: "rgba(192,132,252,0.2)",  muscles: ["Training"] },
+  REST:      { emoji: "😴", color: "#4b5563", glow: "rgba(75,85,99,0.1)",     muscles: ["Recovery"] },
 };
 
 const CATEGORY_META = {
@@ -107,8 +107,9 @@ function getTemplateDays(template) {
 
 function StatTile({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">{label}</p>
+    <div className="rounded-xl px-4 py-3"
+      style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.22)" }}>
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "rgba(168,85,247,0.6)" }}>{label}</p>
       <p className="mt-1 text-lg font-black text-white">{value}</p>
     </div>
   );
@@ -293,8 +294,9 @@ function TemplatesPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-14 w-14 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-          <p className="text-sm uppercase tracking-widest text-gray-500">Loading programs...</p>
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-t-transparent"
+            style={{ borderColor: "rgba(124,58,237,0.25)", borderTopColor: "#a855f7" }} />
+          <p className="text-sm uppercase tracking-widest" style={{ color: "rgba(168,85,247,0.6)" }}>Loading programs...</p>
         </div>
       </div>
     );
@@ -315,7 +317,8 @@ function TemplatesPage() {
               </p>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
+            <div className="flex gap-2 overflow-x-auto rounded-2xl p-1.5"
+              style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)" }}>
               {templates.map((template) => {
                 const isActive = template.id === activeTemplate?.id;
                 return (
@@ -323,9 +326,10 @@ function TemplatesPage() {
                     key={template.id}
                     type="button"
                     onClick={() => handleSelectTemplate(template.id)}
-                    className={`min-h-11 whitespace-nowrap rounded-xl px-4 text-xs font-black uppercase tracking-[0.16em] transition ${
-                      isActive ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
-                    }`}
+                    className="min-h-11 whitespace-nowrap rounded-xl px-4 text-xs font-black uppercase tracking-[0.16em] transition"
+                    style={isActive
+                      ? { background: "linear-gradient(135deg,#7c3aed,#ec4899)", color: "white", boxShadow: "0 4px 16px rgba(124,58,237,0.4)" }
+                      : { color: "rgba(255,255,255,0.4)" }}
                   >
                     {template.category}
                   </button>
@@ -344,19 +348,25 @@ function TemplatesPage() {
         {activeTemplate && (
           <>
             <section className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-              <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-white/[0.025] to-orange-300/5 p-5">
+              <div className="rounded-2xl p-5"
+                style={{
+                  background: "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(236,72,153,0.05) 100%)",
+                  border: "1px solid rgba(124,58,237,0.25)"
+                }}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-orange-300/25 bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-300">
+                  <span className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                    style={{ background: "rgba(124,58,237,0.18)", border: "1px solid rgba(168,85,247,0.3)", color: "#c084fc" }}>
                     {meta.level}
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
+                  <span className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }}>
                     {meta.goal}
                   </span>
                 </div>
                 <h2 className="mt-4 text-3xl font-black uppercase tracking-normal text-white md:text-5xl" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
                   {activeTemplate.name}
                 </h2>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-400">{activeTemplate.description}</p>
+                <p className="mt-2 max-w-3xl text-sm leading-6" style={{ color: "rgba(255,255,255,0.45)" }}>{activeTemplate.description}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">

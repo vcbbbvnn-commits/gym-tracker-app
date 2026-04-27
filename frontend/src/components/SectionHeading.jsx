@@ -13,7 +13,7 @@ function SectionHeading({ eyebrow, title, subtitle }) {
         </h2>
       )}
       {subtitle && (
-        <p className="text-sm leading-relaxed text-gray-500">{subtitle}</p>
+        <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{subtitle}</p>
       )}
     </div>
   );

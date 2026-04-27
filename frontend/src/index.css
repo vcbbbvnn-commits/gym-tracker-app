@@ -5,33 +5,30 @@
 @tailwind utilities;
 
 /* =============================================
-   ROOT VARIABLES
+   ROOT VARIABLES — Deep Purple Theme
    ============================================= */
 :root {
-  --fire: #fb6b1d;
-  --ember: #d85a24;
-  --blaze: #ff9a3d;
-  --gold: #f6b647;
-  --void: #090d14;
-  --carbon: #101722;
-  --iron: #161f2b;
-  --steel: #273241;
+  --violet:   #7c3aed;
+  --violet-lt:#a855f7;
+  --pink:     #ec4899;
+  --pink-lt:  #f472b6;
+  --void:     #0d0a1a;
+  --carbon:   #120e22;
+  --iron:     #1a1430;
+  --steel:    #241d3e;
+  --muted:    rgba(255,255,255,0.45);
 }
 
 /* =============================================
    BASE STYLES
    ============================================= */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #090d14;
+  background-color: var(--void);
   color: #e5e7eb;
   min-height: 100vh;
   overflow-x: hidden;
@@ -39,16 +36,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* App background */
+/* App ambient background */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 12% 8%, rgba(251, 107, 29, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 45% at 90% 20%, rgba(45, 75, 110, 0.22) 0%, transparent 58%),
-    linear-gradient(180deg, #0b111b 0%, #101722 55%, #090d14 100%);
-  background-size: auto;
+    radial-gradient(ellipse 75% 55% at 10% 5%,  rgba(124,58,237,0.13) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 92% 15%,  rgba(236,72,153,0.10) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 40% at 50% 90%,  rgba(124,58,237,0.07) 0%, transparent 55%),
+    linear-gradient(180deg, #100d20 0%, #120e22 55%, #0d0a1a 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -60,7 +57,7 @@ body::before {
 }
 
 /* =============================================
-   FLOATING PARTICLES BACKGROUND
+   FLOATING PARTICLES
    ============================================= */
 .particles-bg {
   position: fixed;
@@ -73,15 +70,15 @@ body::before {
 .particle {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(251,107,29,0.52) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(168,85,247,0.48) 0%, transparent 70%);
   animation: floatParticle linear infinite;
   will-change: transform;
 }
 
 @keyframes floatParticle {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.5; }
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.4; }
   100% { transform: translateY(-10vh) scale(1); opacity: 0; }
 }
 
@@ -93,14 +90,14 @@ body::before {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-panel:hover {
-  border-color: rgba(251,107,29,0.28);
-  box-shadow: 0 22px 54px rgba(0,0,0,0.58), 0 0 36px rgba(251,107,29,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-color: rgba(168,85,247,0.3);
+  box-shadow: 0 22px 54px rgba(0,0,0,0.65), 0 0 40px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
   transform: translateY(-2px);
 }
 
@@ -110,20 +107,20 @@ body::before {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* =============================================
-   FIRE BUTTON
+   PRIMARY BUTTON — Purple → Pink gradient
    ============================================= */
 .btn-fire {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: linear-gradient(135deg, #ff7a1a 0%, #f45112 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
   color: white;
   font-weight: 700;
   font-size: 14px;
@@ -134,7 +131,7 @@ body::before {
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 12px 30px rgba(251,107,29,0.35);
+  box-shadow: 0 12px 30px rgba(124,58,237,0.4);
   text-transform: uppercase;
 }
 
@@ -149,16 +146,11 @@ body::before {
 
 .btn-fire:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 14px 34px rgba(251,107,29,0.48), 0 0 54px rgba(251,107,29,0.18);
+  box-shadow: 0 16px 36px rgba(124,58,237,0.5), 0 0 60px rgba(236,72,153,0.2);
 }
 
-.btn-fire:hover::before {
-  opacity: 1;
-}
-
-.btn-fire:active {
-  transform: translateY(0) scale(0.98);
-}
+.btn-fire:hover::before { opacity: 1; }
+.btn-fire:active { transform: translateY(0) scale(0.98); }
 
 /* =============================================
    GHOST BUTTON
@@ -181,9 +173,9 @@ body::before {
 }
 
 .btn-ghost:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(251,107,29,0.34);
-  color: #f7b07c;
+  background: rgba(124,58,237,0.1);
+  border-color: rgba(168,85,247,0.4);
+  color: #c084fc;
   transform: translateY(-2px);
 }
 
@@ -204,29 +196,27 @@ body::before {
 }
 
 .input-field:focus {
-  border-color: rgba(251,107,29,0.62);
+  border-color: rgba(168,85,247,0.65);
   background: rgba(0,0,0,0.5);
-  box-shadow: 0 0 0 3px rgba(251,107,29,0.12), 0 0 20px rgba(251,107,29,0.1);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15), 0 0 20px rgba(124,58,237,0.1);
 }
 
-.input-field::placeholder {
-  color: rgba(255,255,255,0.25);
-}
+.input-field::placeholder { color: rgba(255,255,255,0.22); }
 
 /* =============================================
    STAT CARD
    ============================================= */
 .stat-card {
-  background: linear-gradient(135deg, rgba(251,107,29,0.1) 0%, rgba(251,107,29,0.035) 100%);
-  border: 1px solid rgba(251,107,29,0.2);
-  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(236,72,153,0.04) 100%);
+  border: 1px solid rgba(124,58,237,0.22);
+  border-radius: 16px;
   padding: 20px 24px;
   transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  border-color: rgba(251,107,29,0.38);
-  box-shadow: 0 8px 32px rgba(251,107,29,0.14);
+  border-color: rgba(168,85,247,0.4);
+  box-shadow: 0 8px 32px rgba(124,58,237,0.18);
   transform: translateY(-3px);
 }
 
@@ -236,7 +226,7 @@ body::before {
 .workout-card {
   background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 20px;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -246,25 +236,21 @@ body::before {
 .workout-card::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, #ff7a1a 0%, #d85a24 100%);
+  background: linear-gradient(180deg, #7c3aed 0%, #ec4899 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .workout-card:hover {
-  border-color: rgba(251,107,29,0.3);
-  background: linear-gradient(135deg, rgba(251,107,29,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  border-color: rgba(168,85,247,0.32);
+  background: linear-gradient(135deg, rgba(124,58,237,0.07) 0%, rgba(255,255,255,0.02) 100%);
   transform: translateY(-3px);
-  box-shadow: 0 18px 44px rgba(0,0,0,0.45), 0 0 28px rgba(251,107,29,0.1);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.5), 0 0 30px rgba(124,58,237,0.12);
 }
 
-.workout-card:hover::before {
-  opacity: 1;
-}
+.workout-card:hover::before { opacity: 1; }
 
 /* =============================================
    SECTION BADGE
@@ -274,8 +260,8 @@ body::before {
   align-items: center;
   gap: 6px;
   padding: 5px 14px;
-  background: linear-gradient(135deg, rgba(255,122,26,0.95) 0%, rgba(244,81,18,0.95) 100%);
-  border: 1px solid rgba(255,154,61,0.45);
+  background: linear-gradient(135deg, rgba(124,58,237,0.9) 0%, rgba(236,72,153,0.9) 100%);
+  border: 1px solid rgba(168,85,247,0.45);
   border-radius: 8px;
   color: #ffffff;
   font-size: 11px;
@@ -285,11 +271,11 @@ body::before {
 }
 
 /* =============================================
-   DIVIDER LINE
+   DIVIDER
    ============================================= */
 .fire-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(251,107,29,0.4) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.5) 30%, rgba(236,72,153,0.5) 70%, transparent 100%);
 }
 
 /* =============================================
@@ -303,21 +289,21 @@ body::before {
   border-radius: 50px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(229,231,235,0.7);
+  color: rgba(229,231,235,0.65);
   transition: all 0.3s ease;
   letter-spacing: 0.02em;
   text-decoration: none;
 }
 
 .nav-link:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(124,58,237,0.1);
   color: #e5e7eb;
 }
 
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(251,107,29,0.22) 0%, rgba(216,90,36,0.12) 100%);
-  color: #f7a66f;
-  border: 1px solid rgba(251,107,29,0.32);
+  background: linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(236,72,153,0.12) 100%);
+  color: #c084fc;
+  border: 1px solid rgba(168,85,247,0.35);
 }
 
 /* =============================================
@@ -332,7 +318,7 @@ body::before {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff7a1a 0%, #f6b647 100%);
+  background: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%);
   border-radius: 2px;
   transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -340,28 +326,19 @@ body::before {
 /* =============================================
    SCROLLBAR
    ============================================= */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #090d14;
-}
-
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0d0a1a; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(251,107,29,0.32);
+  background: rgba(124,58,237,0.35);
   border-radius: 3px;
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(251,107,29,0.52);
-}
+::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.55); }
 
 /* =============================================
    SELECT STYLING
    ============================================= */
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fb6b1d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a855f7' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   -webkit-appearance: none;
@@ -369,7 +346,7 @@ select {
 }
 
 select option {
-  background: #111418;
+  background: #120e22;
   color: #e5e7eb;
 }
 
@@ -388,38 +365,38 @@ select option {
    TEXT EFFECTS
    ============================================= */
 .gradient-text {
-  background: linear-gradient(135deg, #ff7a1a 0%, #f6b647 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .fire-text {
-  background: linear-gradient(135deg, #ff7a1a 0%, #f6b647 55%, #ff9a3d 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* =============================================
-   FLOATING BADGES IN HERO
+   FLOATING BADGES
    ============================================= */
 .floating-badge {
   position: absolute;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(7,9,13,0.84);
-  border: 1px solid rgba(251,107,29,0.24);
-  border-radius: 14px;
+  background: rgba(13,10,26,0.85);
+  border: 1px solid rgba(124,58,237,0.28);
+  border-radius: 16px;
   padding: 14px 20px;
   animation: float 6s ease-in-out infinite;
   will-change: transform;
-  box-shadow: 0 10px 34px rgba(0,0,0,0.42), 0 0 20px rgba(251,107,29,0.12);
+  box-shadow: 0 10px 34px rgba(0,0,0,0.45), 0 0 24px rgba(124,58,237,0.14);
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+  50%       { transform: translateY(-12px); }
 }
 
 /* =============================================
@@ -427,22 +404,55 @@ select option {
    ============================================= */
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid rgba(251,107,29,0.62);
+  outline: 2px solid rgba(168,85,247,0.65);
   outline-offset: 3px;
   border-radius: 8px;
 }
 
 /* =============================================
-   LOADING SKELETON
+   SKELETON LOADER
    ============================================= */
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(124,58,237,0.08) 50%,
+    rgba(255,255,255,0.04) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease infinite;
   border-radius: 8px;
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* =============================================
+   GRADIENT CARD BORDER (Deep Purple special)
+   ============================================= */
+.gradient-border {
+  position: relative;
+  border-radius: 16px;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.6) 0%, rgba(236,72,153,0.6) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* =============================================
+   PILL NAV ACTIVE
+   ============================================= */
+.pill-active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(236,72,153,0.12) 100%);
+  border: 1px solid rgba(168,85,247,0.38);
+  color: #c084fc;
 }
