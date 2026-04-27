@@ -1,101 +1,133 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-function GlowStat({ icon, title, value }) {
+// Muscle group images from Unsplash
+const MUSCLE_IMAGES = {
+  CHEST:    "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&q=85&fit=crop",
+  BACK:     "https://images.unsplash.com/photo-1603287681836-b174ce5074c2?w=500&q=85&fit=crop",
+  LEGS:     "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=500&q=85&fit=crop",
+  SHOULDERS:"https://images.unsplash.com/photo-1581009137042-c552e485697a?w=500&q=85&fit=crop",
+  ARMS:     "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=500&q=85&fit=crop",
+  PUSH:     "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&q=85&fit=crop",
+  PULL:     "https://images.unsplash.com/photo-1603287681836-b174ce5074c2?w=500&q=85&fit=crop",
+  UPPER:    "https://images.unsplash.com/photo-1581009137042-c552e485697a?w=500&q=85&fit=crop",
+  LOWER:    "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=500&q=85&fit=crop",
+};
+
+function getHour() { return new Date().getHours(); }
+function getGreeting() {
+  const h = getHour();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+// Circular Activity Ring (SVG)
+function ActivityRing({ value, max, color, size = 80, stroke = 9, label, sublabel }) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(value / max, 1);
+  const offset = circ * (1 - pct);
   return (
-    <div
-      className="flex min-w-[205px] items-center gap-3 rounded-2xl px-5 py-4 backdrop-blur-md"
-      style={{
-        background: "rgba(13,10,26,0.75)",
-        border: "1px solid rgba(124,58,237,0.35)",
-        boxShadow: "0 0 28px rgba(124,58,237,0.18)",
-      }}
-    >
-      <div
-        className="flex h-11 w-11 items-center justify-center rounded-xl text-xl"
-        style={{ background: "rgba(124,58,237,0.18)", border: "1px solid rgba(168,85,247,0.28)" }}
-      >
-        {icon}
+    <div className="flex flex-col items-center gap-2">
+      <svg width={size} height={size} className="ring-svg" style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${color}22`} strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.34,1.56,0.64,1)", filter: `drop-shadow(0 0 6px ${color}88)` }} />
+      </svg>
+      <div className="text-center">
+        <p className="text-sm font-black text-white">{label}</p>
+        <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>{sublabel}</p>
       </div>
+    </div>
+  );
+}
+
+function StatBadge({ icon, title, value, color }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl p-4"
+      style={{ background: "rgba(28,28,30,0.8)", border: "0.5px solid rgba(255,255,255,0.1)" }}>
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
+        style={{ background: `${color}18` }}>{icon}</div>
       <div>
-        <p className="text-sm font-black text-white">{title}</p>
-        <p className="text-sm font-semibold" style={{ color: "#c084fc" }}>{value}</p>
+        <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>{title}</p>
+        <p className="text-sm font-black text-white">{value}</p>
       </div>
     </div>
   );
 }
 
 function HomePage() {
+  const { user } = useAuth();
+  const displayName = user?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Athlete";
+
   return (
-    <section className="relative min-h-screen overflow-hidden" style={{ background: "#0d0a1a" }}>
-      {/* Hero image */}
+    <section className="relative min-h-screen overflow-hidden" style={{ background: "#000" }}>
+      {/* Bodybuilder hero image */}
       <img
         src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1800&q=90&fit=crop"
-        alt="Bodybuilder lifting in a gym"
+        alt="Bodybuilder lifting"
         className="absolute inset-0 h-full w-full object-cover object-center"
-        style={{ filter: "brightness(0.45) contrast(1.1) saturate(0.55)" }}
+        style={{ filter: "brightness(0.35) contrast(1.1)" }}
       />
 
-      {/* Purple-pink overlay */}
-      <div className="absolute inset-0" style={{
-        background: "linear-gradient(135deg, rgba(13,10,26,0.92) 0%, rgba(124,58,237,0.18) 50%, rgba(13,10,26,0.85) 100%)"
-      }} />
-      <div className="absolute inset-0" style={{
-        background: "linear-gradient(to top, rgba(13,10,26,0.95) 0%, transparent 50%, rgba(13,10,26,0.4) 100%)"
-      }} />
+      {/* Dark overlay gradient */}
+      <div className="absolute inset-0"
+        style={{ background: "linear-gradient(to right, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.1) 100%)" }} />
+      <div className="absolute inset-0"
+        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.98) 0%, transparent 50%)" }} />
 
-      {/* Ambient orbs */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-5%] top-[15%] h-[380px] w-[380px] rounded-full blur-[130px]"
-          style={{ background: "rgba(124,58,237,0.22)" }} />
-        <div className="absolute right-[5%] top-[20%] h-[280px] w-[280px] rounded-full blur-[110px]"
-          style={{ background: "rgba(236,72,153,0.16)" }} />
-      </div>
+      {/* Content */}
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] items-center px-6 pb-20 pt-32 md:px-10">
+        <div className="max-w-2xl">
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1500px] items-center px-7 pb-16 pt-32 md:px-12">
-        <div className="max-w-3xl">
-          {/* Eyebrow badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2"
-            style={{ background: "rgba(124,58,237,0.18)", border: "1px solid rgba(168,85,247,0.35)" }}>
-            <span className="h-2 w-2 animate-pulse rounded-full" style={{ background: "#a855f7" }} />
-            <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "#c084fc" }}>
-              Your Performance Hub
+          {/* Greeting */}
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#30d158" }} />
+            <span className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+              {getGreeting()}, {displayName}
             </span>
           </div>
 
-          <h1
-            className="text-[64px] font-black uppercase leading-[0.96] tracking-normal text-white md:text-[96px]"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", textShadow: "0 8px 28px rgba(0,0,0,0.55)" }}
-          >
-            Your Fitness
-            <br />
+          {/* Hero headline */}
+          <h1 className="text-[60px] font-black uppercase leading-[0.9] text-white md:text-[88px]"
+            style={{ fontFamily: "'Bebas Neue', sans-serif", textShadow: "0 4px 24px rgba(0,0,0,0.6)" }}>
+            Push Your<br />
             <span style={{
-              background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>
-              Journey
-            </span>
-            <br />
-            Starts Here
+              background: "linear-gradient(135deg, #ff6b00 0%, #ff9a3d 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text"
+            }}>Limits</span><br />
+            Every Day
           </h1>
 
-          <p className="mt-6 max-w-xl text-base leading-7" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Track every set, beat every PR, and follow elite training splits — all in one place.
+          <p className="mt-5 max-w-lg text-base leading-7" style={{ color: "rgba(255,255,255,0.5)" }}>
+            Track every set, crush every PR, and follow elite training programs — all in one premium app.
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-5">
-            <GlowStat icon="🔥" title="Today's Burn" value="612 cal" />
-            <GlowStat icon="🏆" title="New PR!" value="Deadlift 160kg" />
-            <GlowStat icon="⚡" title="Workout Streak" value="17 Days" />
+          {/* Activity Rings */}
+          <div className="mt-10 flex items-center gap-8 rounded-2xl p-5 w-fit"
+            style={{ background: "rgba(28,28,30,0.85)", backdropFilter: "blur(30px)", border: "0.5px solid rgba(255,255,255,0.1)" }}>
+            <ActivityRing value={612} max={800} color="#ff375f" size={76} label="612" sublabel="Cal" />
+            <ActivityRing value={4} max={5} color="#30d158" size={76} label="4/5" sublabel="Workouts" />
+            <ActivityRing value={17} max={30} color="#0a84ff" size={76} label="17" sublabel="Day Streak" />
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link to="/sessions" className="btn-fire min-w-[235px] justify-center py-4 text-base">
+          {/* Stats row */}
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatBadge icon="🔥" title="Today's Burn" value="612 cal" color="#ff375f" />
+            <StatBadge icon="🏆" title="Latest PR" value="Deadlift 160kg" color="#ffd60a" />
+            <StatBadge icon="⚡" title="Streak" value="17 Days" color="#0a84ff" />
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link to="/sessions" className="btn-fire min-w-[200px] py-4 text-base font-black">
               ▶ Start Training
             </Link>
-            <Link to="/templates" className="btn-ghost min-w-[265px] justify-center py-4 text-base">
-              Browse Templates →
+            <Link to="/templates" className="btn-ghost min-w-[200px] py-4 text-base font-semibold">
+              Browse Programs →
             </Link>
           </div>
         </div>

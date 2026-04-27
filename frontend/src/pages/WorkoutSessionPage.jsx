@@ -11,24 +11,19 @@ function formatTime(s) {
 }
 
 const FOCUS_CONFIG = {
-  CHEST:     { color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.3)", icon: "🏋️" },
-  BACK:      { color: "#3b82f6", bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.3)", icon: "🔙" },
-  SHOULDERS: { color: "#a78bfa", bg: "rgba(167,139,250,0.12)", border: "rgba(167,139,250,0.3)", icon: "💪" },
-  LEGS:      { color: "#34d399", bg: "rgba(52,211,153,0.12)", border: "rgba(52,211,153,0.3)", icon: "🦵" },
-  BICEPS:    { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", icon: "💪" },
-  TRICEPS:   { color: "#fb7185", bg: "rgba(251,113,133,0.12)", border: "rgba(251,113,133,0.3)", icon: "🔱" },
-  PUSH:      { color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.3)", icon: "↗️" },
-  PULL:      { color: "#3b82f6", bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.3)", icon: "↙️" },
-  TRAINING:  { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", icon: "⚡" },
+  CHEST:     { color: "#ff6b00", bg: "rgba(255,107,0,0.12)",  border: "rgba(255,107,0,0.3)",  icon: "🏋️" },
+  BACK:      { color: "#0a84ff", bg: "rgba(10,132,255,0.12)", border: "rgba(10,132,255,0.3)", icon: "↙️" },
+  SHOULDERS: { color: "#bf5af2", bg: "rgba(191,90,242,0.12)", border: "rgba(191,90,242,0.3)", icon: "💪" },
+  LEGS:      { color: "#30d158", bg: "rgba(48,209,88,0.12)",  border: "rgba(48,209,88,0.3)",  icon: "🦵" },
+  BICEPS:    { color: "#ffd60a", bg: "rgba(255,214,10,0.12)", border: "rgba(255,214,10,0.3)", icon: "💪" },
+  TRICEPS:   { color: "#ff375f", bg: "rgba(255,55,95,0.12)",  border: "rgba(255,55,95,0.3)",  icon: "🔱" },
+  ARMS:      { color: "#ff375f", bg: "rgba(255,55,95,0.12)",  border: "rgba(255,55,95,0.3)",  icon: "💪" },
+  PUSH:      { color: "#ff6b00", bg: "rgba(255,107,0,0.12)",  border: "rgba(255,107,0,0.3)",  icon: "↗️" },
+  PULL:      { color: "#0a84ff", bg: "rgba(10,132,255,0.12)", border: "rgba(10,132,255,0.3)", icon: "↙️" },
+  UPPER:     { color: "#bf5af2", bg: "rgba(191,90,242,0.12)", border: "rgba(191,90,242,0.3)", icon: "🧥" },
+  LOWER:     { color: "#30d158", bg: "rgba(48,209,88,0.12)",  border: "rgba(48,209,88,0.3)",  icon: "🦵" },
+  TRAINING:  { color: "#ffd60a", bg: "rgba(255,214,10,0.12)", border: "rgba(255,214,10,0.3)", icon: "⚡" },
 };
-
-Object.assign(FOCUS_CONFIG, {
-  CHEST: { ...FOCUS_CONFIG.CHEST, color: "#22d3ee", bg: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.3)" },
-  LEGS: { ...FOCUS_CONFIG.LEGS, color: "#a3e635", bg: "rgba(163,230,53,0.12)", border: "rgba(163,230,53,0.3)" },
-  BICEPS: { ...FOCUS_CONFIG.BICEPS, color: "#67e8f9", bg: "rgba(103,232,249,0.12)", border: "rgba(103,232,249,0.3)" },
-  PUSH: { ...FOCUS_CONFIG.PUSH, color: "#22d3ee", bg: "rgba(34,211,238,0.12)", border: "rgba(34,211,238,0.3)" },
-  TRAINING: { ...FOCUS_CONFIG.TRAINING, color: "#a3e635", bg: "rgba(163,230,53,0.12)", border: "rgba(163,230,53,0.3)" },
-});
 
 function getFocusFromName(name = "") {
   const n = name.toUpperCase();
@@ -38,8 +33,58 @@ function getFocusFromName(name = "") {
   return "TRAINING";
 }
 
+/* ─── Muscle images ─────────────────────────────── */
+const MUSCLE_IMAGES = {
+  CHEST:"https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=300&q=75&fit=crop",
+  BACK:"https://images.unsplash.com/photo-1603287681836-b174ce5074c2?w=300&q=75&fit=crop",
+  SHOULDERS:"https://images.unsplash.com/photo-1581009137042-c552e485697a?w=300&q=75&fit=crop",
+  LEGS:"https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=300&q=75&fit=crop",
+  BICEPS:"https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=300&q=75&fit=crop",
+  TRICEPS:"https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=300&q=75&fit=crop",
+  ARMS:"https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=300&q=75&fit=crop",
+  PUSH:"https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=300&q=75&fit=crop",
+  PULL:"https://images.unsplash.com/photo-1603287681836-b174ce5074c2?w=300&q=75&fit=crop",
+  UPPER:"https://images.unsplash.com/photo-1581009137042-c552e485697a?w=300&q=75&fit=crop",
+  LOWER:"https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=300&q=75&fit=crop",
+  TRAINING:"https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=300&q=75&fit=crop",
+};
+
+/* ─── Rest Timer ─────────────────────────────────── */
+function RestTimer({ seconds, onDone, onSkip }) {
+  const [remaining, setRemaining] = useState(seconds);
+  useEffect(() => {
+    if (remaining <= 0) { onDone(); return; }
+    const t = setTimeout(() => setRemaining(r => r - 1), 1000);
+    return () => clearTimeout(t);
+  }, [remaining]);
+  const pct = ((seconds - remaining) / seconds) * 100;
+  return (
+    <div className="rest-timer mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">⏱️</span>
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider" style={{color:"#0a84ff"}}>Rest Timer</p>
+            <p className="text-xs" style={{color:"rgba(255,255,255,0.4)"}}>Next set in…</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-black tabular-nums" style={{color:"#0a84ff"}}>{remaining}s</span>
+          <button type="button" onClick={onSkip}
+            className="rounded-xl px-3 py-1.5 text-xs font-bold"
+            style={{background:"rgba(10,132,255,0.15)",color:"#0a84ff"}}>Skip</button>
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{background:"rgba(10,132,255,0.15)"}}>
+        <div className="h-full rounded-full transition-all duration-1000"
+          style={{width:`${pct}%`,background:"#0a84ff"}} />
+      </div>
+    </div>
+  );
+}
+
 /* ─── ExerciseCard ──────────────────────────────── */
-function ExerciseCard({ exercise, accentColor, onDeleteExercise, onAddSet, onDeleteSet, index }) {
+function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAddSet, onDeleteSet, index, onSetLogged }) {
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
   const [logging, setLogging] = useState(false);
@@ -49,9 +94,8 @@ function ExerciseCard({ exercise, accentColor, onDeleteExercise, onAddSet, onDel
     if (!reps || !weight) return;
     setLogging(true);
     await onAddSet(exercise.id, Number(reps), Number(weight));
-    setReps("");
-    setWeight("");
-    setLogging(false);
+    setReps(""); setWeight(""); setLogging(false);
+    if (onSetLogged) onSetLogged();
   };
 
   const completedSets = exercise.sets.length;
@@ -60,22 +104,18 @@ function ExerciseCard({ exercise, accentColor, onDeleteExercise, onAddSet, onDel
   const targetReps = notesMatch ? notesMatch[2] : null;
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl animate-fade-up"
-      style={{
-        animationDelay: `${index * 80}ms`,
-        background: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
-        border: `1px solid ${accentColor}25`,
-        boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
-      }}
-    >
-      {/* Left color bar */}
-      <div
-        className="absolute inset-y-0 left-0 w-1 rounded-l-2xl"
-        style={{ background: `linear-gradient(180deg, ${accentColor} 0%, ${accentColor}55 100%)` }}
-      />
-
-      <div className="pl-5 pr-4 pt-5 pb-5">
+    <div className="relative overflow-hidden rounded-2xl ios-slide-up"
+      style={{animationDelay:`${index*80}ms`,background:"#1c1c1e"}}>
+      {/* Muscle image strip */}
+      {muscleImg && (
+        <div className="relative h-24 overflow-hidden">
+          <img src={muscleImg} alt="muscle" className="h-full w-full object-cover"
+            style={{filter:"brightness(0.4) saturate(0.7)"}} />
+          <div className="absolute inset-0" style={{background:"linear-gradient(to bottom,transparent 30%,#1c1c1e 100%)"}} />
+          <div className="absolute inset-x-0 bottom-0 h-0.5" style={{background:`linear-gradient(90deg,${accentColor},transparent)`}} />
+        </div>
+      )}
+      <div className="px-4 pb-4 pt-4">
         {/* Header row */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
@@ -229,13 +269,15 @@ function ExerciseCard({ exercise, accentColor, onDeleteExercise, onAddSet, onDel
 /* ─── Main Page ─────────────────────────────────── */
 function WorkoutSessionPage() {
   const { workoutId } = useParams();
-  const [workout, setWorkout] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [elapsed, setElapsed] = useState(0);
+  const [workout, setWorkout]   = useState(null);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(true);
+  const [elapsed, setElapsed]   = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [addExName, setAddExName] = useState("");
+  const [restTimer, setRestTimer] = useState(null); // null | number (seconds)
+  const [restDuration, setRestDuration] = useState(90);
   const intervalRef = useRef(null);
 
   /* Load workout */
@@ -496,15 +538,30 @@ function WorkoutSessionPage() {
           </div>
         )}
 
+        {/* ── Rest Timer ── */}
+        {restTimer !== null && (
+          <RestTimer seconds={restTimer} onDone={()=>setRestTimer(null)} onSkip={()=>setRestTimer(null)} />
+        )}
+        {/* Rest duration picker */}
+        <div className="mb-4 flex items-center gap-2">
+          <p className="text-xs font-bold uppercase tracking-wider mr-1" style={{color:"rgba(255,255,255,0.35)"}}>Rest:</p>
+          {[60,90,120].map(s=>(
+            <button key={s} type="button" onClick={()=>setRestDuration(s)}
+              className="rounded-xl px-3 py-1.5 text-xs font-black transition"
+              style={restDuration===s
+                ?{background:"#0a84ff",color:"white"}
+                :{background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)"}}>
+              {s}s
+            </button>
+          ))}
+        </div>
+
         {/* ── Exercise List ── */}
         <div className="space-y-4 mb-6">
           {workout.exercises.length === 0 ? (
-            <div
-              className="rounded-2xl p-10 text-center"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
-            >
+            <div className="rounded-2xl p-10 text-center" style={{background:"#1c1c1e"}}>
               <p className="text-3xl mb-3">🏋️</p>
-              <p className="text-gray-400 text-sm">No exercises loaded. Add one below.</p>
+              <p className="text-sm" style={{color:"rgba(255,255,255,0.4)"}}>No exercises loaded. Add one below.</p>
             </div>
           ) : (
             workout.exercises.map((exercise, i) => (
@@ -512,10 +569,12 @@ function WorkoutSessionPage() {
                 key={exercise.id}
                 exercise={exercise}
                 accentColor={cfg.color}
+                muscleImg={MUSCLE_IMAGES[focus]}
                 index={i}
                 onDeleteExercise={handleDeleteExercise}
                 onAddSet={handleAddSet}
                 onDeleteSet={handleDeleteSet}
+                onSetLogged={()=>setRestTimer(restDuration)}
               />
             ))
           )}
