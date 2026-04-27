@@ -43,33 +43,41 @@ const CATEGORY_META = {
   "Upper/Lower":    { level:"Balanced", goal:"Strength + Size", rhythm:"4-day" },
 };
 
-function getDayFocus(exercises) {
-  if (!exercises?.length) return "REST";
-  const scores = { CHEST:0, BACK:0, LEGS:0, SHOULDERS:0, BICEPS:0, TRICEPS:0 };
-  exercises.forEach(ex => {
-    const n = ex.name.toLowerCase();
-    if (n.includes("squat")||n.includes("leg press")||n.includes("lunge")) scores.LEGS+=3;
-    else if (n.includes("leg")||n.includes("calf")||n.includes("romanian")) scores.LEGS+=1;
-    if (n.includes("bench")||n.includes("chest press")||n.includes("incline")) scores.CHEST+=3;
-    else if (n.includes("fly")||n.includes("pec")||n.includes("dip")) scores.CHEST+=1;
-    if (n.includes("deadlift")||n.includes("row")||n.includes("pull")) scores.BACK+=3;
-    else if (n.includes("lat")||n.includes("shrug")) scores.BACK+=1;
-    if (n.includes("overhead press")||n.includes("shoulder press")) scores.SHOULDERS+=3;
-    else if (n.includes("lateral raise")||n.includes("front raise")) scores.SHOULDERS+=1;
-    if (n.includes("bicep")||n.includes("curl")) scores.BICEPS+=1;
-    if (n.includes("tricep")||n.includes("skull")||n.includes("pushdown")) scores.TRICEPS+=1;
-  });
-  const top = Object.keys(scores).reduce((a,b) => scores[a]>scores[b]?a:b);
-  if (scores[top]===0) return "TRAINING";
-  const hasChest=scores.CHEST>0, hasBack=scores.BACK>0, hasSh=scores.SHOULDERS>0;
-  const hasBi=scores.BICEPS>0, hasTri=scores.TRICEPS>0;
-  if (hasChest&&hasSh&&!hasBack) return "PUSH";
-  if (hasBack&&hasBi&&!hasChest) return "PULL";
-  if (hasChest&&hasBack) return "UPPER";
-  if (hasBi&&hasTri&&!hasChest&&!hasBack) return "ARMS";
-  if (scores.LEGS>0&&!hasChest&&!hasBack) return "LOWER";
-  return top;
+// ── Hardcoded day labels per template (no guessing from exercise names) ──
+const TEMPLATE_DAY_MAP = {
+  "Bro Split": {
+    1: "CHEST",
+    2: "BACK",
+    3: "SHOULDERS",
+    4: "LEGS",
+    5: "ARMS",
+  },
+  "Push/Pull/Legs": {
+    1: "PUSH",
+    2: "PULL",
+    3: "LEGS",
+    4: "PUSH",
+    5: "PULL",
+    6: "LEGS",
+  },
+  "Upper/Lower": {
+    1: "UPPER",
+    2: "LOWER",
+    3: "REST",
+    4: "UPPER",
+    5: "LOWER",
+  },
+};
+
+function getDayFocus(category, dayNumber, exercises) {
+  // Hardcoded map — always correct
+  if (TEMPLATE_DAY_MAP[category]?.[dayNumber]) {
+    return TEMPLATE_DAY_MAP[category][dayNumber];
+  }
+  // Fallback for custom templates
+  return exercises?.length ? "TRAINING" : "REST";
 }
+
 
 function getTemplateDays(template) {
   const numDays = template.duration_days || Math.max(...template.exercises.map(e => e.day_number));
@@ -79,10 +87,10 @@ function getTemplateDays(template) {
   }));
 }
 
-function DayCard({ dayIndex, exercises, templateId, onStart, starting, expanded, onToggle }) {
-  const dayNum = dayIndex+1;
-  const focus  = getDayFocus(exercises);
-  const cfg    = FOCUS_CONFIG[focus];
+function DayCard({ dayIndex, exercises, templateId, category, onStart, starting, expanded, onToggle }) {
+  const dayNum = dayIndex + 1;
+  const focus  = getDayFocus(category, dayNum, exercises);
+  const cfg    = FOCUS_CONFIG[focus] || FOCUS_CONFIG.TRAINING;
   const isRest = focus==="REST";
   const img    = MUSCLE_IMAGES[focus];
 
@@ -304,7 +312,7 @@ function TemplatesPage() {
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
             {days.map(({dayIndex,exercises})=>(
               <DayCard key={dayIndex} dayIndex={dayIndex} exercises={exercises}
-                templateId={active.id} onStart={handleStart}
+                templateId={active.id} category={active.category} onStart={handleStart}
                 starting={startingKey===`${active.id}-${dayIndex+1}`}
                 expanded={Boolean(expandedDays[`${active.id}-${dayIndex+1}`])}
                 onToggle={()=>{
