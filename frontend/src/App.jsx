@@ -1,4 +1,4 @@
-// Version 1.0.2 - Exercise Library
+// Version 1.0.3 - Redeploy Trigger
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
