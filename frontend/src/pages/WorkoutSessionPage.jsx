@@ -370,7 +370,7 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
           ))}
         </div>
 
-        {/* Log set form */}}
+        {/* Log set form */}
         <form onSubmit={handleLog} className="mb-4 flex gap-2">
           <input
             type="number"
@@ -594,8 +594,9 @@ function WorkoutSessionPage() {
   const dayLabel = dayMatch ? `DAY ${dayMatch[1]}` : null;
 
   return (
-    <div className="min-h-screen pb-24 pt-2">
-      <div className="mx-auto max-w-3xl px-4">
+    <>
+      <div className="min-h-screen pb-24 pt-2">
+        <div className="mx-auto max-w-3xl px-4">
 
         {/* ── Session Header ── */}
         <div
@@ -884,6 +885,7 @@ function WorkoutSessionPage() {
         </div>
       </div>
     )}
+    </>
   );
 }
 
