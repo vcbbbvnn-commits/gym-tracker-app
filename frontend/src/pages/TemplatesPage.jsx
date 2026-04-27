@@ -72,10 +72,10 @@ function getDayFocus(exercises) {
 }
 
 function getTemplateDays(template) {
-  const maxDay = Math.max(...template.exercises.map(e=>e.day_number), 7);
-  return Array.from({length:maxDay},(_,i)=>({
-    dayIndex:i,
-    exercises:template.exercises.filter(e=>e.day_number===i+1).sort((a,b)=>a.order-b.order),
+  const numDays = template.duration_days || Math.max(...template.exercises.map(e => e.day_number));
+  return Array.from({ length: numDays }, (_, i) => ({
+    dayIndex: i,
+    exercises: template.exercises.filter(e => e.day_number === i + 1).sort((a, b) => a.order - b.order),
   }));
 }
 

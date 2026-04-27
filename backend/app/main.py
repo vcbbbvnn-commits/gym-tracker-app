@@ -20,12 +20,12 @@ def seed_templates():
         db.query(WorkoutTemplate).filter(WorkoutTemplate.is_preset == True).delete()
         db.commit()
 
-        # 1. Bro Split (5-Day)
+        # 1. Bro Split (5-Day) — Mon Chest, Tue Back, Wed Shoulders, Thu Legs, Fri Arms
         bro_split = WorkoutTemplateCreate(
             name="Professional Bro Split",
-            description="Focus on one muscle group per day: Chest, Back, Shoulders, Legs, Arms (Biceps & Triceps).",
+            description="One muscle group per day. Mon: Chest · Tue: Back · Wed: Shoulders · Thu: Legs · Fri: Arms",
             category="Bro Split",
-            duration_days=7,
+            duration_days=5,
             exercises=[
                 # Day 1: Chest
                 TemplateExerciseCreate(name="Flat Bench Press", recommended_sets=4, recommended_reps="8-10", day_number=1, order=1),
@@ -56,12 +56,12 @@ def seed_templates():
         )
         create_workout_template(db, bro_split)
 
-        # 2. Push/Pull/Legs (6-Day Cycle)
+        # 2. Push/Pull/Legs (6-Day) — PPL × 2 then rest
         ppl_template = WorkoutTemplateCreate(
             name="Elite Push/Pull/Legs",
-            description="Push (Chest/Sh/Tr), Pull (Back/Bi/Rear Delts/Traps), Legs (Quads/Ham/Glute/Calf).",
+            description="Day 1: Push · Day 2: Pull · Day 3: Legs · Day 4: Push · Day 5: Pull · Day 6: Legs",
             category="Push/Pull/Legs",
-            duration_days=7,
+            duration_days=6,
             exercises=[
                 # Day 1: Push (Chest, Shoulders, Triceps)
                 TemplateExerciseCreate(name="Bench Press", recommended_sets=4, recommended_reps="8-10", day_number=1, order=1),
@@ -97,12 +97,12 @@ def seed_templates():
         )
         create_workout_template(db, ppl_template)
 
-        # 3. Upper/Lower Split
+        # 3. Upper/Lower (4-Day) — Mon Upper, Tue Lower, Wed Rest, Thu Upper, Fri Lower
         ul_split = WorkoutTemplateCreate(
             name="Hypertrophy Upper/Lower",
-            description="Upper Body Days (Chest/Back/Shoulders/Arms), Lower Body Days (Quads/Hamstrings/Glutes/Calves).",
+            description="Day 1: Upper · Day 2: Lower · Day 3: Rest · Day 4: Upper · Day 5: Lower",
             category="Upper/Lower",
-            duration_days=7,
+            duration_days=5,
             exercises=[
                 # Day 1: Upper Body
                 TemplateExerciseCreate(name="Bench Press", recommended_sets=4, recommended_reps="8-10", day_number=1, order=1),
