@@ -137,9 +137,32 @@ def seed_templates():
         db.close()
 
 
+def run_migrations():
+    """Apply any schema changes that create_all won't handle (ALTER TABLE)."""
+    with engine.connect() as conn:
+        from sqlalchemy import text
+        # Detect dialect
+        dialect = engine.dialect.name  # 'postgresql' or 'sqlite'
+
+        # ── Add set_type to set_entries ──────────────────────────────
+        if dialect == "postgresql":
+            conn.execute(text("""
+                ALTER TABLE set_entries
+                ADD COLUMN IF NOT EXISTS set_type VARCHAR(20) NOT NULL DEFAULT 'normal';
+            """))
+        else:  # sqlite doesn't support IF NOT EXISTS on ADD COLUMN
+            try:
+                conn.execute(text("ALTER TABLE set_entries ADD COLUMN set_type VARCHAR(20) NOT NULL DEFAULT 'normal';"))
+            except Exception:
+                pass  # column already exists
+
+        conn.commit()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    run_migrations()
     seed_templates()
     yield
 
