@@ -454,40 +454,57 @@ button:focus-visible, a:focus-visible {
 .muscle-img:hover { filter: brightness(0.9) saturate(1); }
 
 /* =============================================
-   BOTTOM TAB BAR (iOS)
+   BOTTOM TAB BAR (iOS) — compact mobile design
    ============================================= */
 .bottom-tab-bar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: rgba(18,18,18,0.92);
+  background: rgba(10,10,10,0.96);
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border-top: 0.5px solid rgba(255,255,255,0.1);
-  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  border-top: 0.5px solid rgba(255,255,255,0.08);
+  /* safe area for notched phones */
+  padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
   z-index: 100;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* auto-fit: works for 4 or 5 tabs */
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 }
 
 .tab-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 6px 4px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: rgba(255,255,255,0.4);
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.35);
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* hide label on very small phones, show from 360px+ */
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.tab-item.active { color: var(--accent); }
-.tab-item.active .tab-icon { transform: scale(1.15); }
+/* show label text only when screen is wide enough */
+@media (max-width: 359px) {
+  .tab-item span:last-child { display: none; }
+}
+
+.tab-item.active {
+  color: #ff6b00;
+}
+
+.tab-item.active .tab-icon {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 6px rgba(255,107,0,0.5));
+}
 
 .tab-icon {
-  font-size: 22px;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 18px;
   line-height: 1;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.18s ease;
 }

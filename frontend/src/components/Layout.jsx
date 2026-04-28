@@ -90,7 +90,7 @@ function Layout() {
         </header>
 
         {/* ── MAIN CONTENT ── */}
-        <main className={isHome ? "" : "mx-auto max-w-[1400px] px-4 pb-28 pt-14 sm:px-6 lg:px-8"}>
+        <main className={isHome ? "" : "mx-auto max-w-[1400px] px-4 pb-20 pt-14 sm:px-6 lg:px-8"}>
           <Outlet />
         </main>
 
