@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // ── Free exercise DB (yuhonas/free-exercise-db on GitHub) ──────────────────
 const DB_URL =
@@ -7,33 +6,23 @@ const DB_URL =
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
+// ── Wger REST API for exercise GIFs/videos (no key needed) ─────────────────
+// We'll also embed YouTube search links as a fallback in the modal
+
 const MUSCLE_COLORS = {
-  abdominals:       "#ff6b00",
-  abductors:        "#ff9a3d",
-  adductors:        "#ffcc00",
-  biceps:           "#30d158",
-  calves:           "#34c759",
-  chest:            "#0a84ff",
-  forearms:         "#5e5ce6",
-  glutes:           "#bf5af2",
-  hamstrings:       "#ff375f",
-  "hip flexors":    "#ff6961",
-  "it band":        "#ffd60a",
-  "lat":            "#0a84ff",
-  "lower back":     "#ff9500",
-  "middle back":    "#ff6b00",
-  neck:             "#8e8e93",
-  quadriceps:       "#30d158",
-  shoulders:        "#bf5af2",
-  "trapezius":      "#5e5ce6",
-  triceps:          "#ff375f",
+  abdominals: "#ff6b00", abductors: "#ff9a3d", adductors: "#ffcc00",
+  biceps: "#30d158", calves: "#34c759", chest: "#0a84ff",
+  forearms: "#5e5ce6", glutes: "#bf5af2", hamstrings: "#ff375f",
+  "hip flexors": "#ff6961", "it band": "#ffd60a", lat: "#0a84ff",
+  "lower back": "#ff9500", "middle back": "#ff6b00", neck: "#8e8e93",
+  quadriceps: "#30d158", shoulders: "#bf5af2", trapezius: "#5e5ce6",
+  triceps: "#ff375f",
 };
 
 const EQUIPMENT_ICONS = {
-  barbell: "🏋️", dumbbell: "💪", "body only": "🤸",
-  machine: "⚙️", "cable": "🔗", kettlebells: "🔔",
-  bands: "〰️", "medicine ball": "⚽", "foam roll": "🥢",
-  "e-z curl bar": "🏋️", other: "🔧",
+  barbell: "🏋️", dumbbell: "💪", "body only": "🤸", machine: "⚙️",
+  cable: "🔗", kettlebells: "🔔", bands: "〰️", "medicine ball": "⚽",
+  "foam roll": "🥢", "e-z curl bar": "🏋️", other: "🔧",
 };
 
 const LEVEL_COLOR = { beginner: "#30d158", intermediate: "#ff9500", expert: "#ff375f" };
@@ -49,36 +38,122 @@ const EQUIPMENT_LIST = [
   "kettlebells", "bands", "medicine ball", "e-z curl bar",
 ];
 
-/* ── Exercise Detail Modal ────────────────────────────────────────────────── */
-function ExerciseModal({ ex, onClose, onAddToWorkout }) {
-  if (!ex) return null;
-  const imgSrc = ex.images?.[0] ? IMG_BASE + ex.images[0] : null;
-  const altImg = ex.images?.[1] ? IMG_BASE + ex.images[1] : null;
+/* ── Animated Exercise Demo (CSS-driven flip between 2 frames) ───────────── */
+function ExerciseAnimation({ images, name, size = "full" }) {
+  const [frame, setFrame] = useState(0);
+  const [loaded0, setLoaded0] = useState(false);
+  const [loaded1, setLoaded1] = useState(false);
+  const timerRef = useRef(null);
+
+  const img0 = images?.[0] ? IMG_BASE + images[0] : null;
+  const img1 = images?.[1] ? IMG_BASE + images[1] : null;
+
+  // Start animation once both images are loaded
+  useEffect(() => {
+    if (loaded0 && loaded1 && img1) {
+      timerRef.current = setInterval(() => {
+        setFrame(f => (f === 0 ? 1 : 0));
+      }, 700); // 700ms per frame = smooth GIF feel
+    }
+    return () => clearInterval(timerRef.current);
+  }, [loaded0, loaded1, img1]);
+
+  if (!img0) {
+    return (
+      <div className={`flex items-center justify-center text-5xl ${size === "full" ? "h-64" : "h-36"}`}
+        style={{ background: "#2c2c2e" }}>
+        💪
+      </div>
+    );
+  }
+
+  const heightClass = size === "full" ? "h-64" : "h-36";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
-      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)" }}
-      onClick={onClose}>
-      <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden"
-        style={{ background: "#1c1c1e", border: "0.5px solid rgba(255,255,255,0.12)", maxHeight: "90vh", overflowY: "auto" }}
-        onClick={e => e.stopPropagation()}>
+    <div className={`relative ${heightClass} overflow-hidden`} style={{ background: "#0a0a0a" }}>
+      {/* Frame 0 */}
+      <img
+        src={img0}
+        alt={`${name} start`}
+        onLoad={() => setLoaded0(true)}
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+        style={{
+          opacity: frame === 0 ? 1 : 0,
+          filter: "brightness(0.85) saturate(0.9)",
+        }}
+      />
+      {/* Frame 1 */}
+      {img1 && (
+        <img
+          src={img1}
+          alt={`${name} end`}
+          onLoad={() => setLoaded1(true)}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          style={{
+            opacity: frame === 1 ? 1 : 0,
+            filter: "brightness(0.85) saturate(0.9)",
+          }}
+        />
+      )}
 
-        {/* Image strip */}
-        {imgSrc && (
-          <div className="relative h-48 overflow-hidden">
-            <img src={imgSrc} alt={ex.name} className="w-full h-full object-cover"
-              style={{ filter: "brightness(0.7)" }} />
-            {altImg && (
-              <img src={altImg} alt={ex.name + " alt"}
-                className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-60"
-                style={{ mixBlendMode: "luminosity" }} />
-            )}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to top,#1c1c1e 0%,transparent 60%)" }} />
-            <button onClick={onClose}
-              className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full text-sm"
-              style={{ background: "rgba(0,0,0,0.6)", color: "white" }}>✕</button>
-          </div>
-        )}
+      {/* Loading pulse */}
+      {!loaded0 && (
+        <div className="absolute inset-0 skeleton" />
+      )}
+
+      {/* "LIVE" indicator when animating */}
+      {loaded0 && loaded1 && img1 && (
+        <div className="absolute top-2 left-2 flex items-center gap-1.5 rounded-full px-2 py-0.5"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}>
+          <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#30d158" }} />
+          <span className="text-[9px] font-black uppercase tracking-wider text-white">Live Demo</span>
+        </div>
+      )}
+
+      {/* Bottom gradient */}
+      {size === "full" && (
+        <div className="absolute inset-x-0 bottom-0 h-24"
+          style={{ background: "linear-gradient(to top, #1c1c1e 0%, transparent 100%)" }} />
+      )}
+    </div>
+  );
+}
+
+/* ── Exercise Detail Modal ────────────────────────────────────────────────── */
+function ExerciseModal({ ex, onClose }) {
+  if (!ex) return null;
+  const muscle = ex.primaryMuscles?.[0];
+  const color = MUSCLE_COLORS[muscle] || "#ff6b00";
+  const ytQuery = encodeURIComponent(`${ex.name} exercise form technique`);
+  const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
+      style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(30px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden"
+        style={{
+          background: "#1c1c1e",
+          border: "0.5px solid rgba(255,255,255,0.12)",
+          maxHeight: "92vh",
+          overflowY: "auto",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Animated Demo ── */}
+        <div className="relative">
+          <ExerciseAnimation images={ex.images} name={ex.name} size="full" />
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full text-sm font-black transition hover:scale-110"
+            style={{ background: "rgba(0,0,0,0.75)", color: "white", backdropFilter: "blur(10px)" }}
+          >✕</button>
+          {/* Muscle color strip on bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
+        </div>
 
         <div className="p-6">
           {/* Badges */}
@@ -99,17 +174,21 @@ function ExerciseModal({ ex, onClose, onAddToWorkout }) {
             )}
           </div>
 
-          <h2 className="text-2xl font-black text-white mb-1">{ex.name}</h2>
+          <h2 className="text-2xl font-black text-white mb-4">{ex.name}</h2>
 
           {/* Muscles */}
           <div className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>
               Primary Muscles
             </p>
             <div className="flex flex-wrap gap-1.5">
               {ex.primaryMuscles?.map(m => (
-                <span key={m} className="rounded-full px-3 py-0.5 text-xs font-bold capitalize"
-                  style={{ background: `${MUSCLE_COLORS[m] || "#ff6b00"}22`, color: MUSCLE_COLORS[m] || "#ff6b00", border: `1px solid ${MUSCLE_COLORS[m] || "#ff6b00"}44` }}>
+                <span key={m} className="rounded-full px-3 py-1 text-xs font-bold capitalize"
+                  style={{
+                    background: `${MUSCLE_COLORS[m] || "#ff6b00"}18`,
+                    color: MUSCLE_COLORS[m] || "#ff6b00",
+                    border: `1px solid ${MUSCLE_COLORS[m] || "#ff6b00"}44`,
+                  }}>
                   {m}
                 </span>
               ))}
@@ -117,7 +196,7 @@ function ExerciseModal({ ex, onClose, onAddToWorkout }) {
             {ex.secondaryMuscles?.length > 0 && (
               <div className="mt-2">
                 <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>
-                  Secondary
+                  Also Works
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {ex.secondaryMuscles.map(m => (
@@ -131,62 +210,115 @@ function ExerciseModal({ ex, onClose, onAddToWorkout }) {
             )}
           </div>
 
-          {/* Instructions */}
+          {/* ── Step-by-step Instructions ── */}
           {ex.instructions?.length > 0 && (
-            <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>
-                How To Perform
-              </p>
-              <ol className="space-y-2">
+            <div className="mb-6 rounded-2xl overflow-hidden"
+              style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+              <div className="px-4 py-3 border-b border-white/5">
+                <p className="text-[10px] uppercase tracking-widest font-black" style={{ color: "#ff6b00" }}>
+                  📋 How To Perform
+                </p>
+              </div>
+              <ol className="p-4 space-y-3">
                 {ex.instructions.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black mt-0.5"
-                      style={{ background: "rgba(255,107,0,0.2)", color: "#ff6b00" }}>
+                    <span
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-black"
+                      style={{ background: "rgba(255,107,0,0.15)", color: "#ff6b00", border: "1px solid rgba(255,107,0,0.3)" }}>
                       {i + 1}
                     </span>
-                    {step}
+                    <span className="leading-relaxed pt-0.5">{step}</span>
                   </li>
                 ))}
               </ol>
             </div>
           )}
 
-          {onAddToWorkout && (
-            <button onClick={() => { onAddToWorkout(ex.name); onClose(); }}
-              className="w-full rounded-2xl py-4 text-sm font-black uppercase tracking-widest"
-              style={{ background: "linear-gradient(135deg,#ff6b00,#ff375f)", color: "#000" }}>
-              + Add to Current Workout
-            </button>
-          )}
+          {/* ── Watch on YouTube button ── */}
+          <a
+            href={ytUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
+            style={{ background: "#ff0000", color: "#fff" }}
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            Watch Full Tutorial on YouTube
+          </a>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Exercise Card ────────────────────────────────────────────────────────── */
+/* ── Exercise Card (animated on hover) ──────────────────────────────────── */
 function ExCard({ ex, onClick }) {
-  const imgSrc = ex.images?.[0] ? IMG_BASE + ex.images[0] : null;
+  const [hovered, setHovered] = useState(false);
+  const [frame, setFrame] = useState(0);
+  const timerRef = useRef(null);
   const muscle = ex.primaryMuscles?.[0];
   const color = MUSCLE_COLORS[muscle] || "#ff6b00";
+  const img0 = ex.images?.[0] ? IMG_BASE + ex.images[0] : null;
+  const img1 = ex.images?.[1] ? IMG_BASE + ex.images[1] : null;
+
+  useEffect(() => {
+    if (hovered && img1) {
+      timerRef.current = setInterval(() => setFrame(f => f === 0 ? 1 : 0), 600);
+    } else {
+      clearInterval(timerRef.current);
+      setFrame(0);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [hovered, img1]);
 
   return (
-    <button onClick={onClick} className="text-left rounded-2xl overflow-hidden transition hover:scale-[1.02] active:scale-[0.98]"
-      style={{ background: "#1c1c1e", border: `1px solid rgba(255,255,255,0.06)` }}>
-      {/* Exercise image */}
-      <div className="relative h-36 overflow-hidden" style={{ background: "#2c2c2e" }}>
-        {imgSrc ? (
-          <img src={imgSrc} alt={ex.name} className="w-full h-full object-cover"
-            loading="lazy" style={{ filter: "brightness(0.75) saturate(0.8)" }} />
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group text-left rounded-2xl overflow-hidden transition-all duration-300"
+      style={{
+        background: "#1c1c1e",
+        border: hovered ? `1px solid ${color}44` : "1px solid rgba(255,255,255,0.06)",
+        transform: hovered ? "scale(1.02) translateY(-2px)" : "scale(1)",
+        boxShadow: hovered ? `0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px ${color}22` : "none",
+      }}
+    >
+      {/* Animated image area */}
+      <div className="relative h-36 overflow-hidden" style={{ background: "#1a1a1a" }}>
+        {img0 ? (
+          <>
+            <img src={img0} alt={ex.name} loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+              style={{ opacity: frame === 0 ? 1 : 0, filter: "brightness(0.75) saturate(0.85)" }} />
+            {img1 && (
+              <img src={img1} alt={ex.name} loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                style={{ opacity: frame === 1 ? 1 : 0, filter: "brightness(0.75) saturate(0.85)" }} />
+            )}
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">
+          <div className="flex h-full items-center justify-center text-4xl">
             {EQUIPMENT_ICONS[ex.equipment] || "💪"}
           </div>
         )}
-        <div className="absolute inset-0" style={{ background: `linear-gradient(to top,#1c1c1e 0%,transparent 55%)` }} />
+
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top,#1c1c1e 0%,transparent 55%)" }} />
+
+        {/* Play indicator on hover */}
+        {hovered && img1 && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full px-2 py-0.5"
+            style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
+            <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#30d158" }} />
+            <span className="text-[8px] font-black uppercase text-white">Live</span>
+          </div>
+        )}
+
         {/* Level badge */}
-        <span className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[10px] font-black uppercase"
-          style={{ background: `${LEVEL_COLOR[ex.level] || "#8e8e93"}cc`, color: "#000" }}>
+        <span className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase"
+          style={{ background: `${LEVEL_COLOR[ex.level] || "#8e8e93"}dd`, color: "#000" }}>
           {ex.level}
         </span>
       </div>
@@ -198,7 +330,7 @@ function ExCard({ ex, onClick }) {
             style={{ background: `${color}18`, color }}>
             {muscle || "general"}
           </span>
-          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
             {EQUIPMENT_ICONS[ex.equipment] || "🔧"}
           </span>
         </div>
@@ -207,7 +339,7 @@ function ExCard({ ex, onClick }) {
   );
 }
 
-/* ── Main Page ────────────────────────────────────────────────────────────── */
+/* ── Main Page ─────────────────────────────────────────────────────────────── */
 export default function ExerciseLibraryPage() {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -221,7 +353,7 @@ export default function ExerciseLibraryPage() {
   const PER_PAGE = 24;
 
   useEffect(() => {
-    const cached = sessionStorage.getItem("exerciseDB");
+    const cached = sessionStorage.getItem("exerciseDB_v2");
     if (cached) {
       setExercises(JSON.parse(cached));
       setLoading(false);
@@ -230,7 +362,7 @@ export default function ExerciseLibraryPage() {
     fetch(DB_URL)
       .then(r => r.json())
       .then(data => {
-        sessionStorage.setItem("exerciseDB", JSON.stringify(data));
+        sessionStorage.setItem("exerciseDB_v2", JSON.stringify(data));
         setExercises(data);
         setLoading(false);
       })
@@ -246,8 +378,7 @@ export default function ExerciseLibraryPage() {
       if (muscle !== "All" && !ex.primaryMuscles?.includes(muscle)) return false;
       if (equipment !== "All" && ex.equipment !== equipment) return false;
       if (level !== "All" && ex.level !== level) return false;
-      if (q && !ex.name.toLowerCase().includes(q) &&
-          !ex.primaryMuscles?.join(" ").includes(q)) return false;
+      if (q && !ex.name.toLowerCase().includes(q) && !ex.primaryMuscles?.join(" ").includes(q)) return false;
       return true;
     });
   }, [exercises, query, muscle, equipment, level]);
@@ -255,7 +386,6 @@ export default function ExerciseLibraryPage() {
   const paged = filtered.slice(0, page * PER_PAGE);
   const hasMore = paged.length < filtered.length;
 
-  // Reset page when filters change
   useEffect(() => setPage(1), [query, muscle, equipment, level]);
 
   return (
@@ -267,7 +397,9 @@ export default function ExerciseLibraryPage() {
           Exercise Library
         </h1>
         <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-          {loading ? "Loading…" : `${filtered.length.toLocaleString()} exercises · Tap any to see form guide & muscles`}
+          {loading
+            ? "Loading…"
+            : `${filtered.length.toLocaleString()} exercises · Hover to preview · Tap for full guide + video`}
         </p>
       </div>
 
@@ -277,7 +409,7 @@ export default function ExerciseLibraryPage() {
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search exercises, muscles…"
+          placeholder="Search bench press, squat, deadlift…"
           className="w-full rounded-2xl border py-3.5 pl-11 pr-4 text-sm text-white outline-none transition"
           style={{ background: "#1c1c1e", borderColor: "rgba(255,255,255,0.1)" }}
           onFocus={e => e.target.style.borderColor = "#ff6b0080"}
@@ -286,8 +418,7 @@ export default function ExerciseLibraryPage() {
       </div>
 
       {/* Filter rows */}
-      <div className="space-y-3">
-        {/* Muscle group */}
+      <div className="space-y-2">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {MUSCLE_GROUPS.map(m => (
             <button key={m} onClick={() => setMuscle(m)}
@@ -299,7 +430,6 @@ export default function ExerciseLibraryPage() {
             </button>
           ))}
         </div>
-        {/* Equipment + Level */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {["All", "beginner", "intermediate", "expert"].map(l => (
             <button key={l} onClick={() => setLevel(l)}
@@ -311,7 +441,7 @@ export default function ExerciseLibraryPage() {
             </button>
           ))}
           <div className="w-px flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }} />
-          {EQUIPMENT_LIST.slice(0, 6).map(eq => (
+          {EQUIPMENT_LIST.map(eq => (
             <button key={eq} onClick={() => setEquipment(eq)}
               className="flex-shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold capitalize transition"
               style={equipment === eq
@@ -323,7 +453,6 @@ export default function ExerciseLibraryPage() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-2xl px-5 py-4 text-sm"
           style={{ background: "rgba(255,69,58,0.1)", border: "1px solid rgba(255,69,58,0.2)", color: "#ff453a" }}>
@@ -331,16 +460,12 @@ export default function ExerciseLibraryPage() {
         </div>
       )}
 
-      {/* Loading skeleton */}
       {loading && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {Array.from({ length: 24 }).map((_, i) => (
-            <div key={i} className="skeleton rounded-2xl h-52" />
-          ))}
+          {Array.from({ length: 24 }).map((_, i) => <div key={i} className="skeleton rounded-2xl h-52" />)}
         </div>
       )}
 
-      {/* Grid */}
       {!loading && (
         <>
           {filtered.length === 0 ? (
@@ -360,7 +485,7 @@ export default function ExerciseLibraryPage() {
           {hasMore && (
             <div className="flex justify-center pt-4">
               <button onClick={() => setPage(p => p + 1)}
-                className="rounded-2xl px-8 py-3 text-sm font-bold"
+                className="rounded-2xl px-8 py-3 text-sm font-bold transition hover:opacity-80"
                 style={{ background: "#1c1c1e", color: "#ff6b00", border: "1px solid rgba(255,107,0,0.3)" }}>
                 Load More ({filtered.length - paged.length} remaining)
               </button>
@@ -369,7 +494,6 @@ export default function ExerciseLibraryPage() {
         </>
       )}
 
-      {/* Detail Modal */}
       {selected && <ExerciseModal ex={selected} onClose={() => setSelected(null)} />}
     </div>
   );
