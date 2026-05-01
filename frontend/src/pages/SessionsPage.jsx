@@ -1,9 +1,119 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/client";
 
-const workoutTemplates = ["Push", "Pull", "Legs", "Upper", "Lower", "Full Body"];
+const SPLIT_TYPES = [
+  { name: "Push",       icon: "↗️", color: "#ff6b00", desc: "Chest · Shoulders · Triceps" },
+  { name: "Pull",       icon: "↙️", color: "#0a84ff", desc: "Back · Biceps · Rear Delts" },
+  { name: "Legs",       icon: "🦵", color: "#30d158", desc: "Quads · Hamstrings · Calves" },
+  { name: "Upper",      icon: "🧥", color: "#bf5af2", desc: "Upper Body Compound" },
+  { name: "Lower",      icon: "⬇️", color: "#ff9500", desc: "Lower Body Compound" },
+  { name: "Full Body",  icon: "💥", color: "#ffd60a", desc: "Total Body Strength" },
+  { name: "Chest",      icon: "🏋️", color: "#ff6b00", desc: "Chest Focus" },
+  { name: "Back",       icon: "💪", color: "#0a84ff", desc: "Back Focus" },
+  { name: "Shoulders",  icon: "🎯", color: "#bf5af2", desc: "Shoulders Focus" },
+  { name: "Arms",       icon: "💪", color: "#ff375f", desc: "Biceps & Triceps" },
+];
 
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/* ── Calendar Component ─────────────────────────────────────────── */
+function WorkoutCalendar({ workouts }) {
+  const [viewDate, setViewDate] = useState(new Date());
+
+  // Build a map of date-string → workouts
+  const workoutsByDate = useMemo(() => {
+    const map = {};
+    workouts.forEach(w => {
+      // Use created_at if available, else use today
+      const d = w.created_at ? new Date(w.created_at) : null;
+      if (!d) return;
+      const key = d.toISOString().slice(0, 10);
+      if (!map[key]) map[key] = [];
+      map[key].push(w);
+    });
+    return map;
+  }, [workouts]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div className="rounded-3xl overflow-hidden" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+      {/* Month nav */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <button onClick={() => setViewDate(new Date(year, month - 1, 1))}
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition text-lg">‹</button>
+        <p className="text-base font-black text-white">{MONTH_NAMES[month]} {year}</p>
+        <button onClick={() => setViewDate(new Date(year, month + 1, 1))}
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition text-lg">›</button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 border-b border-white/5">
+        {DAY_LABELS.map(d => (
+          <div key={d} className="py-2 text-center text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Day cells */}
+      <div className="grid grid-cols-7">
+        {cells.map((day, idx) => {
+          if (!day) return <div key={`empty-${idx}`} className="h-12" />;
+          const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const dayWorkouts = workoutsByDate[dateStr] || [];
+          const isToday = dateStr === todayStr;
+          const hasWorkout = dayWorkouts.length > 0;
+
+          return (
+            <div key={dateStr} className="relative h-12 flex flex-col items-center justify-center gap-0.5 transition"
+              style={{ borderTop: idx >= 7 ? "0.5px solid rgba(255,255,255,0.04)" : "none" }}>
+              <span className={`text-xs font-bold flex h-7 w-7 items-center justify-center rounded-full transition ${
+                hasWorkout ? "text-black font-black" : isToday ? "text-white" : "text-white/50"
+              }`}
+                style={hasWorkout
+                  ? { background: "linear-gradient(135deg, #30d158, #0a84ff)", boxShadow: "0 2px 8px rgba(48,209,88,0.4)" }
+                  : isToday
+                  ? { background: "rgba(255,107,0,0.25)", border: "1.5px solid #ff6b00", color: "#ff6b00" }
+                  : {}}>
+                {day}
+              </span>
+              {hasWorkout && (
+                <div className="flex gap-0.5">
+                  {dayWorkouts.slice(0, 3).map((w, i) => (
+                    <div key={i} className="h-1 w-1 rounded-full" style={{ background: "#30d158" }} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 px-5 py-3 border-t border-white/5">
+        <div className="flex items-center gap-1.5">
+          <div className="h-4 w-4 rounded-full" style={{ background: "linear-gradient(135deg,#30d158,#0a84ff)" }} />
+          <span className="text-[10px] text-white/40 font-medium">Workout done</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-4 w-4 rounded-full" style={{ background: "rgba(255,107,0,0.25)", border: "1.5px solid #ff6b00" }} />
+          <span className="text-[10px] text-white/40 font-medium">Today</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Page ────────────────────────────────────────────────────── */
 function SessionsPage() {
   const [workouts, setWorkouts] = useState([]);
   const [form, setForm] = useState({ name: "Push", description: "" });
@@ -11,14 +121,15 @@ function SessionsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [activeTab, setActiveTab] = useState("list"); // "list" | "calendar"
 
   const loadWorkouts = async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/workouts");
       setWorkouts(data);
-    } catch (requestError) {
-      setError(requestError.response?.data?.detail || "Unable to load workouts.");
+    } catch (e) {
+      setError(e.response?.data?.detail || "Unable to load workouts.");
     } finally {
       setLoading(false);
     }
@@ -26,197 +137,249 @@ function SessionsPage() {
 
   useEffect(() => { loadWorkouts(); }, []);
 
-  const handleCreateWorkout = async (event) => {
-    event.preventDefault();
+  const handleCreate = async (e) => {
+    e.preventDefault();
     setSubmitting(true);
     setError("");
     try {
       await api.post("/workouts", form);
       setForm({ name: "Push", description: "" });
       await loadWorkouts();
-    } catch (requestError) {
-      setError(requestError.response?.data?.detail || "Unable to create workout.");
+    } catch (e) {
+      setError(e.response?.data?.detail || "Unable to create workout.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteWorkout = async (workoutId) => {
-    setDeletingId(workoutId);
+  const handleDelete = async (id) => {
+    setDeletingId(id);
     try {
-      await api.delete(`/workouts/${workoutId}`);
+      await api.delete(`/workouts/${id}`);
       await loadWorkouts();
-    } catch (requestError) {
-      setError(requestError.response?.data?.detail || "Unable to delete workout.");
+    } catch (e) {
+      setError(e.response?.data?.detail || "Unable to delete workout.");
     } finally {
       setDeletingId(null);
     }
   };
 
+  const selected = SPLIT_TYPES.find(s => s.name === form.name) || SPLIT_TYPES[0];
+
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-10 text-center">
-        <span className="section-badge mb-5 inline-flex px-6 py-3 text-base">Training</span>
-        <h1 className="text-4xl font-black uppercase text-white md:text-5xl">Workout Sessions</h1>
+    <div className="space-y-8 pb-8">
+      {/* ── Page Header ── */}
+      <div className="ios-slide-up">
+        <span className="section-badge mb-3 inline-flex">Training</span>
+        <h1 className="text-5xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+          My Workouts
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+          {workouts.length} session{workouts.length !== 1 ? "s" : ""} logged
+        </p>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[355px_1fr]">
-        {/* ── CREATE FORM ── */}
-        <section
-          className="rounded-2xl p-5 shadow-2xl"
-          style={{ background: "rgba(18,14,34,0.7)", border: "1px solid rgba(124,58,237,0.2)", backdropFilter: "blur(16px)" }}
-        >
-          <h2 className="text-2xl font-black uppercase text-white">Create Workout</h2>
-          <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Build your split program</p>
+      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+        {/* ── LEFT: Create Workout ── */}
+        <div className="space-y-4">
+          <div className="ios-slide-up rounded-3xl overflow-hidden"
+            style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+            {/* Card accent top */}
+            <div className="h-1" style={{ background: `linear-gradient(90deg, ${selected.color}, transparent)` }} />
 
-          <form className="mt-6 space-y-4" onSubmit={handleCreateWorkout}>
-            <div
-              className="overflow-hidden rounded-xl"
-              style={{ border: "1px solid rgba(124,58,237,0.4)", boxShadow: "0 0 24px rgba(124,58,237,0.1)" }}
-            >
-              <select
-                value={form.name}
-                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                className="w-full px-4 py-3 text-white outline-none"
-                style={{ background: "rgba(124,58,237,0.08)", borderBottom: "1px solid rgba(124,58,237,0.2)" }}
-              >
-                {workoutTemplates.map((template) => (
-                  <option key={template} value={template}>{template}</option>
-                ))}
-              </select>
+            <div className="p-5">
+              <h2 className="text-lg font-black text-white mb-4">Create Workout</h2>
 
-              <div
-                className="m-4 flex h-28 items-center justify-center rounded-xl"
-                style={{ background: "rgba(124,58,237,0.08)" }}
-              >
-                <span className="text-5xl">🏋️</span>
-              </div>
+              <form onSubmit={handleCreate} className="space-y-4">
+                {/* Split type grid */}
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>Choose Split</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SPLIT_TYPES.map(s => (
+                      <button key={s.name} type="button" onClick={() => setForm(f => ({ ...f, name: s.name }))}
+                        className="flex items-center gap-2 rounded-2xl px-3 py-2.5 text-left transition-all"
+                        style={form.name === s.name
+                          ? { background: `${s.color}18`, border: `1.5px solid ${s.color}55`, boxShadow: `0 0 14px ${s.color}20` }
+                          : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <span className="text-lg">{s.icon}</span>
+                        <div>
+                          <p className="text-xs font-black text-white leading-none">{s.name}</p>
+                          <p className="text-[9px] mt-0.5 leading-none" style={{ color: "rgba(255,255,255,0.35)" }}>{s.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="px-4 pb-4">
-                <p className="text-base font-semibold text-white">{form.name} Day</p>
-                <label className="mt-4 block text-sm" style={{ color: "rgba(168,85,247,0.75)" }} htmlFor="description">
-                  Notes
-                </label>
-                <textarea
-                  id="description"
-                  rows="3"
-                  placeholder="optional"
-                  value={form.description}
-                  onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                  className="mt-2 w-full resize-none rounded-lg px-3 py-3 text-white outline-none transition placeholder:text-white/20"
-                  style={{
-                    background: "rgba(0,0,0,0.3)",
-                    border: "1px solid rgba(124,58,237,0.2)",
-                  }}
-                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)"; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.2)"; }}
-                />
-              </div>
+                {/* Preview */}
+                <div className="flex items-center gap-3 rounded-2xl p-3"
+                  style={{ background: `${selected.color}10`, border: `1px solid ${selected.color}30` }}>
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-2xl"
+                    style={{ background: `${selected.color}18` }}>{selected.icon}</div>
+                  <div>
+                    <p className="font-black text-white">{selected.name} Day</p>
+                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{selected.desc}</p>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest block mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Notes (optional)
+                  </label>
+                  <textarea rows={2} placeholder="e.g. 4 sets × 8-12 reps each exercise"
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full resize-none rounded-2xl px-3 py-2.5 text-sm text-white outline-none transition placeholder-white/20"
+                    style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    onFocus={e => e.target.style.borderColor = `${selected.color}60`}
+                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+                  />
+                </div>
+
+                {error && (
+                  <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(255,69,58,0.1)", color: "#ff453a" }}>{error}</div>
+                )}
+
+                <button type="submit" disabled={submitting}
+                  className="w-full rounded-2xl py-3.5 text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: `linear-gradient(135deg, ${selected.color}, ${selected.color}bb)`, color: "#000", boxShadow: `0 4px 16px ${selected.color}40` }}>
+                  {submitting ? "Creating…" : `+ Start ${selected.name} Session`}
+                </button>
+              </form>
             </div>
-
-            {/* Split display */}
-            <div
-              className="overflow-hidden rounded-xl"
-              style={{ border: "1px solid rgba(124,58,237,0.2)" }}
-            >
-              <div className="px-4 py-3 text-sm font-bold uppercase tracking-widest"
-                style={{ borderBottom: "1px solid rgba(124,58,237,0.15)", color: "rgba(168,85,247,0.7)" }}>
-                Split
-              </div>
-              <div className="px-4 py-3 text-white">{form.name}</div>
-            </div>
-
-            {error && (
-              <div className="rounded-xl px-4 py-3 text-sm"
-                style={{ background: "rgba(236,72,153,0.1)", border: "1px solid rgba(236,72,153,0.25)", color: "#f472b6" }}>
-                {error}
-              </div>
-            )}
-
-            <button type="submit" disabled={submitting} className="btn-fire w-full justify-center py-3">
-              {submitting ? "Creating..." : "+ Create Workout"}
-            </button>
-          </form>
-
-          <div
-            className="mt-5 rounded-xl px-4 py-3"
-            style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)" }}
-          >
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-              Want pre-built programs?{" "}
-              <Link to="/templates" className="font-bold transition" style={{ color: "#c084fc" }}
-                onMouseEnter={e => { e.currentTarget.style.color = "#f472b6"; }}
-                onMouseLeave={e => { e.currentTarget.style.color = "#c084fc"; }}>
-                Browse Templates →
-              </Link>
-            </p>
-          </div>
-        </section>
-
-        {/* ── SESSIONS LIST ── */}
-        <section>
-          <div className="mb-6">
-            <h2 className="text-2xl font-black uppercase text-white">Active Sessions</h2>
-            <p className="mt-1 text-sm" style={{ color: "rgba(168,85,247,0.7)" }}>
-              {workouts.length} program{workouts.length !== 1 ? "s" : ""} ready
-            </p>
           </div>
 
-          {loading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="skeleton h-24 rounded-xl" />
-              ))}
+          {/* Templates link */}
+          <Link to="/templates"
+            className="ios-slide-up flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition hover:opacity-80"
+            style={{ background: "rgba(255,107,0,0.08)", border: "1px solid rgba(255,107,0,0.2)", color: "#ff6b00" }}>
+            <span className="font-bold">Browse Programs (Bro Split, PPL…)</span>
+            <span>→</span>
+          </Link>
+        </div>
+
+        {/* ── RIGHT: History + Calendar ── */}
+        <div className="space-y-4">
+          {/* Tab switcher */}
+          <div className="flex gap-2">
+            {[["list", "📋 My Sessions"], ["calendar", "📅 Calendar"]].map(([tab, label]) => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className="rounded-2xl px-4 py-2 text-sm font-black transition-all"
+                style={activeTab === tab
+                  ? { background: "#ff6b00", color: "#000" }
+                  : { background: "#1c1c1e", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Calendar Tab */}
+          {activeTab === "calendar" && (
+            <div className="ios-slide-up">
+              <WorkoutCalendar workouts={workouts} />
+              {/* Recent workouts below calendar */}
+              {workouts.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-[10px] uppercase tracking-widest px-1" style={{ color: "rgba(255,255,255,0.3)" }}>Recent Activity</p>
+                  {workouts.slice(0, 5).map(w => {
+                    const d = w.created_at ? new Date(w.created_at) : null;
+                    const dayName = d ? DAY_LABELS[d.getDay()] : "";
+                    const dateStr = d ? `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}` : "";
+                    const sets = w.exercises?.reduce((t, e) => t + e.sets.length, 0) || 0;
+                    return (
+                      <Link key={w.id} to={`/workouts/${w.id}`}
+                        className="flex items-center justify-between rounded-2xl px-4 py-3 transition hover:opacity-80 no-underline"
+                        style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none" }}>
+                        <div className="flex items-center gap-3">
+                          <div className="text-center">
+                            <p className="text-xs font-black text-white">{dayName}</p>
+                            <p className="text-[10px] text-white/40">{dateStr}</p>
+                          </div>
+                          <div className="h-8 w-px bg-white/10" />
+                          <div>
+                            <p className="text-sm font-bold text-white">{w.name}</p>
+                            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{w.exercises?.length || 0} exercises · {sets} sets</p>
+                          </div>
+                        </div>
+                        <span className="text-white/30 text-sm">→</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {!loading && workouts.length === 0 && (
-            <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
-              <div className="mb-5 text-8xl">🏋️‍♂️</div>
-              <h3 className="text-4xl font-black text-white md:text-5xl">No workouts yet</h3>
-              <p className="mt-3 text-lg font-semibold" style={{ color: "#c084fc" }}>
-                Create your first split on the left
-              </p>
-            </div>
-          )}
+          {/* List Tab */}
+          {activeTab === "list" && (
+            <div className="ios-slide-up space-y-3">
+              {loading && [1,2,3].map(i => <div key={i} className="skeleton h-24 rounded-2xl" />)}
 
-          {!loading && workouts.length > 0 && (
-            <div className="space-y-3">
-              {workouts.map((workout) => {
-                const setCount = workout.exercises?.reduce((total, exercise) => total + exercise.sets.length, 0) || 0;
+              {!loading && workouts.length === 0 && (
+                <div className="flex flex-col items-center justify-center rounded-3xl py-20 text-center"
+                  style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="text-6xl mb-4">🏋️‍♂️</div>
+                  <p className="text-xl font-black text-white">No sessions yet</p>
+                  <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>Create your first workout on the left</p>
+                </div>
+              )}
+
+              {!loading && workouts.map((w) => {
+                const sets = w.exercises?.reduce((t, e) => t + e.sets.length, 0) || 0;
+                const volume = w.exercises?.reduce((vol, e) =>
+                  vol + e.sets.reduce((sv, s) => sv + s.reps * s.weight, 0), 0) || 0;
+                const d = w.created_at ? new Date(w.created_at) : null;
+                const dateStr = d
+                  ? `${DAY_LABELS[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`
+                  : "";
+                // color by name
+                const split = SPLIT_TYPES.find(s => w.name.toLowerCase().includes(s.name.toLowerCase()));
+                const color = split?.color || "#ff6b00";
+
                 return (
-                  <div
-                    key={workout.id}
-                    className="workout-card"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <h3 className="text-xl font-black text-white">{workout.name}</h3>
-                        <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-                          {workout.description || "Open this session to add structure."}
-                        </p>
-                        <p className="mt-3 text-xs uppercase tracking-[0.18em]" style={{ color: "rgba(168,85,247,0.6)" }}>
-                          {workout.exercises?.length || 0} exercises · {setCount} sets
-                        </p>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Link
-                          to={`/workouts/${workout.id}`}
-                          className="rounded-xl px-4 py-2 text-sm font-bold text-white transition"
-                          style={{ background: "linear-gradient(135deg,#7c3aed,#ec4899)", boxShadow: "0 4px 14px rgba(124,58,237,0.35)" }}
-                        >
-                          Open
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteWorkout(workout.id)}
-                          disabled={deletingId === workout.id}
-                          className="rounded-xl px-4 py-2 text-sm font-bold transition disabled:opacity-50"
-                          style={{ background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.25)", color: "#f472b6" }}
-                        >
-                          {deletingId === workout.id ? "..." : "Delete"}
-                        </button>
+                  <div key={w.id} className="rounded-2xl overflow-hidden"
+                    style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    {/* Color strip */}
+                    <div className="h-0.5" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
+                    <div className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-black text-white text-base leading-tight truncate">{w.name}</p>
+                            {sets > 0 && (
+                              <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black"
+                                style={{ background: "rgba(48,209,88,0.12)", color: "#30d158", border: "1px solid rgba(48,209,88,0.25)" }}>
+                                ✓ {sets} sets
+                              </span>
+                            )}
+                          </div>
+                          {dateStr && <p className="text-[11px] text-white/35 mb-2">{dateStr}</p>}
+                          {w.description && <p className="text-xs text-white/40 truncate mb-2">{w.description}</p>}
+                          {/* Mini stats */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                              💪 {w.exercises?.length || 0} exercises
+                            </span>
+                            {volume > 0 && (
+                              <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                ⚖️ {Math.round(volume).toLocaleString()} kg vol
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Link to={`/workouts/${w.id}`}
+                            className="rounded-xl px-3.5 py-2 text-xs font-black text-black transition hover:opacity-90"
+                            style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, boxShadow: `0 4px 12px ${color}30` }}>
+                            Open
+                          </Link>
+                          <button onClick={() => handleDelete(w.id)} disabled={deletingId === w.id}
+                            className="rounded-xl px-3 py-2 text-xs font-bold transition disabled:opacity-50"
+                            style={{ background: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.2)", color: "#ff453a" }}>
+                            {deletingId === w.id ? "…" : "🗑️"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -224,7 +387,7 @@ function SessionsPage() {
               })}
             </div>
           )}
-        </section>
+        </div>
       </div>
     </div>
   );

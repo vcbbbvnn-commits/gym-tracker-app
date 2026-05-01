@@ -217,7 +217,7 @@ function PlateCalculator({ onClose }) {
 
 
 /* ─── ExerciseCard ──────────────────────────────── */
-function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAddSet, onDeleteSet, index, onSetLogged }) {
+function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAddSet, onDeleteSet, index, onSetLogged, isCompleted, onMarkComplete }) {
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
   const [setType, setSetType] = useState("normal");
@@ -286,12 +286,31 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
               )}
             </div>
           </div>
-          <button
-            onClick={() => onDeleteExercise(exercise.id)}
-            className="rounded-full px-3 py-1 text-[11px] font-semibold text-gray-500 border border-white/10 hover:border-red-500/40 hover:text-red-400 transition-all"
-          >
-            Remove
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Mark complete button */}
+            {!isCompleted ? (
+              <button
+                onClick={() => onMarkComplete(exercise.id)}
+                disabled={exercise.sets.length === 0}
+                className="rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                style={{ background: "rgba(48,209,88,0.12)", color: "#30d158", border: "1px solid rgba(48,209,88,0.3)" }}
+                title={exercise.sets.length === 0 ? "Log at least one set first" : "Mark exercise complete"}
+              >
+                ✓ Done
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-black"
+                style={{ background: "rgba(48,209,88,0.15)", color: "#30d158", border: "1px solid rgba(48,209,88,0.4)" }}>
+                ✅ Done!
+              </div>
+            )}
+            <button
+              onClick={() => onDeleteExercise(exercise.id)}
+              className="rounded-full px-3 py-1 text-[11px] font-semibold text-gray-500 border border-white/10 hover:border-red-500/40 hover:text-red-400 transition-all"
+            >
+              Remove
+            </button>
+          </div>
         </div>
 
         {/* Sets progress bar */}
@@ -419,46 +438,30 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
 
         {/* Logged sets table */}
         {exercise.sets.length > 0 && (
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ border: "1px solid rgba(255,255,255,0.06)" }}
-          >
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
             {/* Header */}
-            <div
-              className="grid grid-cols-[32px_1fr_1fr_1fr_auto] gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-600"
-              style={{ background: "rgba(0,0,0,0.3)" }}
-            >
-              <span>Set</span>
+            <div className="grid grid-cols-[28px_1fr_1fr_1fr_auto] gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-600"
+              style={{ background: "rgba(0,0,0,0.3)" }}>
+              <span></span>
               <span>Reps</span>
               <span>Weight</span>
               <span>Time</span>
               <span></span>
             </div>
             {exercise.sets.map((s, i) => (
-              <div
-                key={s.id}
-                className="grid grid-cols-[32px_1fr_1fr_1fr_auto] items-center gap-2 px-3 py-2.5 text-sm border-t border-white/5"
-                style={{
-                  background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
-                }}
-              >
-                <span
-                  className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black"
-                  style={{ background: `${accentColor}22`, color: accentColor }}
-                >
-                  {i + 1}
-                </span>
-                <span className="font-semibold text-white">{s.reps}</span>
-                <span className="font-semibold text-white">{s.weight} kg</span>
+              <div key={s.id}
+                className="grid grid-cols-[28px_1fr_1fr_1fr_auto] items-center gap-2 px-3 py-2.5 text-sm border-t border-white/5"
+                style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                {/* Green tick for each logged set */}
+                <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-black"
+                  style={{ background: "rgba(48,209,88,0.18)", color: "#30d158" }}>✓</span>
+                <span className="font-semibold text-white">{s.reps} reps</span>
+                <span className="font-bold" style={{ color: accentColor }}>{s.weight} kg</span>
                 <span className="text-xs text-gray-500">
                   {new Date(s.performed_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                <button
-                  onClick={() => onDeleteSet(s.id)}
-                  className="text-[11px] text-gray-600 hover:text-red-400 transition-colors"
-                >
-                  ✕
-                </button>
+                <button onClick={() => onDeleteSet(s.id)}
+                  className="text-[11px] text-gray-600 hover:text-red-400 transition-colors">✕</button>
               </div>
             ))}
           </div>
@@ -468,6 +471,18 @@ function ExerciseCard({ exercise, accentColor, muscleImg, onDeleteExercise, onAd
           <p className="text-xs text-gray-600 italic">No sets logged yet — add your first set above.</p>
         )}
       </div>
+
+      {/* Completed overlay */}
+      {isCompleted && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl pointer-events-none"
+          style={{ background: "rgba(48,209,88,0.06)", border: "2px solid rgba(48,209,88,0.35)" }}>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full text-3xl"
+              style={{ background: "rgba(48,209,88,0.2)", border: "2px solid #30d158", boxShadow: "0 0 24px rgba(48,209,88,0.4)" }}>✓</div>
+            <p className="text-sm font-black uppercase tracking-widest" style={{ color: "#30d158" }}>Complete!</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -486,6 +501,7 @@ function WorkoutSessionPage() {
   const [restDuration, setRestDuration] = useState(90);
   const [showSummary, setShowSummary] = useState(false);
   const [showPlates, setShowPlates] = useState(false);
+  const [completedExercises, setCompletedExercises] = useState(new Set());
   const intervalRef = useRef(null);
 
 
@@ -779,6 +795,26 @@ function WorkoutSessionPage() {
           ))}
         </div>
 
+        {/* ── Exercise Completion Progress ── */}
+        {workout.exercises.length > 0 && (
+          <div className="mb-4 rounded-2xl px-4 py-3" style={{ background: "rgba(48,209,88,0.06)", border: "1px solid rgba(48,209,88,0.15)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: "rgba(48,209,88,0.8)" }}>Exercises Done</p>
+              <p className="text-sm font-black" style={{ color: "#30d158" }}>
+                {completedExercises.size} <span className="text-white/40 font-normal">/ {workout.exercises.length}</span>
+              </p>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${workout.exercises.length ? (completedExercises.size / workout.exercises.length) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, #30d158, #0a84ff)",
+                  boxShadow: "0 0 10px rgba(48,209,88,0.5)",
+                }} />
+            </div>
+          </div>
+        )}
+
         {/* ── Exercise List ── */}
         <div className="space-y-4 mb-6">
           {workout.exercises.length === 0 ? (
@@ -794,10 +830,12 @@ function WorkoutSessionPage() {
                 accentColor={cfg.color}
                 muscleImg={MUSCLE_IMAGES[focus]}
                 index={i}
+                isCompleted={completedExercises.has(exercise.id)}
+                onMarkComplete={(id) => setCompletedExercises(prev => { const n = new Set(prev); n.add(id); return n; })}
                 onDeleteExercise={handleDeleteExercise}
                 onAddSet={handleAddSet}
                 onDeleteSet={handleDeleteSet}
-                onSetLogged={()=>setRestTimer(restDuration)}
+                onSetLogged={() => setRestTimer(restDuration)}
               />
             ))
           )}
