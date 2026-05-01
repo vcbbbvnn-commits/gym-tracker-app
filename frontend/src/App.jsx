@@ -1,4 +1,4 @@
-// Version 1.0.4 - Strength Score + Coach
+// Version 1.0.5 - AI Gym Coach
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -13,6 +13,7 @@ import TemplatesPage from "./pages/TemplatesPage";
 import ExerciseLibraryPage from "./pages/ExerciseLibraryPage";
 import StrengthScorePage from "./pages/StrengthScorePage";
 import CoachPage from "./pages/CoachPage";
+import AICoachPage from "./pages/AICoachPage";
 
 function App() {
   const { token } = useAuth();
@@ -39,6 +40,7 @@ function App() {
         <Route path="/progress/:exerciseName" element={<ProgressDetailPage />} />
         <Route path="/strength" element={<StrengthScorePage />} />
         <Route path="/coach" element={<CoachPage />} />
+        <Route path="/ai" element={<AICoachPage />} />
       </Route>
       <Route path="*" element={<Navigate to={token ? "/" : "/auth"} replace />} />
     </Routes>

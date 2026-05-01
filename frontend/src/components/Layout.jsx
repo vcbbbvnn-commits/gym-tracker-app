@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 const MOBILE_LINKS = [
   { to: "/",           label: "Home",      icon: "⚡" },
   { to: "/sessions",   label: "Sessions",  icon: "🏋️" },
-  { to: "/coach",      label: "Coach",     icon: "🧠" },
+  { to: "/ai",         label: "AI Coach",  icon: "🤖" },
   { to: "/progress",   label: "Progress",  icon: "📈" },
   { to: "/strength",   label: "Score",     icon: "💯" },
 ];
@@ -14,6 +14,7 @@ const DESKTOP_LINKS = [
   { to: "/sessions",   label: "Sessions",  icon: "🏋️" },
   { to: "/templates",  label: "Programs",  icon: "📋" },
   { to: "/exercises",  label: "Exercises", icon: "🗂️" },
+  { to: "/ai",         label: "AI Coach",  icon: "🤖" },
   { to: "/coach",      label: "Coach",     icon: "🧠" },
   { to: "/strength",   label: "Score",     icon: "💯" },
   { to: "/progress",   label: "Progress",  icon: "📈" },

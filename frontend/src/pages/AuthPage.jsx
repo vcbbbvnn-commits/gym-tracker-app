@@ -29,8 +29,9 @@ function AuthPage() {
     setLoading(true);
     try {
       const payload = mode === "signup" ? form : { email: form.email, password: form.password };
-      await authenticate(mode, payload);
-      navigate("/");
+      const data = await authenticate(mode, payload);
+      const profileKey = `gym_ai_profile_${data.user?.id || data.user?.email || "guest"}`;
+      navigate(mode === "signup" || !localStorage.getItem(profileKey) ? "/ai" : "/");
     } catch (requestError) {
       setError(requestError.response?.data?.detail || "Unable to authenticate right now.");
     } finally {
