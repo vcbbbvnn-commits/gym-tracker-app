@@ -1,4 +1,4 @@
-// Version 1.0.3 - Redeploy Trigger
+// Version 1.0.4 - Strength Score + Coach
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -11,6 +11,8 @@ import ProgressDetailPage from "./pages/ProgressDetailPage";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import ExerciseLibraryPage from "./pages/ExerciseLibraryPage";
+import StrengthScorePage from "./pages/StrengthScorePage";
+import CoachPage from "./pages/CoachPage";
 
 function App() {
   const { token } = useAuth();
@@ -35,6 +37,8 @@ function App() {
         <Route path="/workouts/:workoutId" element={<WorkoutSessionPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/progress/:exerciseName" element={<ProgressDetailPage />} />
+        <Route path="/strength" element={<StrengthScorePage />} />
+        <Route path="/coach" element={<CoachPage />} />
       </Route>
       <Route path="*" element={<Navigate to={token ? "/" : "/auth"} replace />} />
     </Routes>

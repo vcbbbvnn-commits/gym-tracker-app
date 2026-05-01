@@ -1,11 +1,21 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const NAV_LINKS = [
+// Mobile shows 5 core tabs; Desktop shows all
+const MOBILE_LINKS = [
+  { to: "/",           label: "Home",      icon: "⚡" },
+  { to: "/sessions",   label: "Sessions",  icon: "🏋️" },
+  { to: "/coach",      label: "Coach",     icon: "🧠" },
+  { to: "/progress",   label: "Progress",  icon: "📈" },
+  { to: "/strength",   label: "Score",     icon: "💯" },
+];
+const DESKTOP_LINKS = [
   { to: "/",           label: "Home",      icon: "⚡" },
   { to: "/sessions",   label: "Sessions",  icon: "🏋️" },
   { to: "/templates",  label: "Programs",  icon: "📋" },
   { to: "/exercises",  label: "Exercises", icon: "🗂️" },
+  { to: "/coach",      label: "Coach",     icon: "🧠" },
+  { to: "/strength",   label: "Score",     icon: "💯" },
   { to: "/progress",   label: "Progress",  icon: "📈" },
 ];
 
@@ -59,10 +69,9 @@ function Layout() {
 
             {/* Desktop nav */}
             <nav className="hidden items-center gap-1 lg:flex">
-              {NAV_LINKS.map(({ to, label, icon }) => (
+              {DESKTOP_LINKS.map(({ to, label, icon }) => (
                 <NavLink key={to} to={to} end={to === "/"}
-                  className={({ isActive }) =>
-                    `nav-link ${isActive ? "active" : ""}`}>
+                  className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
                   <span>{icon}</span>{label}
                 </NavLink>
               ))}
@@ -96,7 +105,7 @@ function Layout() {
 
         {/* ── BOTTOM TAB BAR (mobile) ── */}
         <nav className="bottom-tab-bar lg:hidden">
-          {NAV_LINKS.map(({ to, label, icon }) => (
+          {MOBILE_LINKS.map(({ to, label, icon }) => (
             <NavLink key={to} to={to} end={to === "/"}
               className={({ isActive }) => `tab-item ${isActive ? "active" : ""}`}>
               <span className="tab-icon">{icon}</span>
