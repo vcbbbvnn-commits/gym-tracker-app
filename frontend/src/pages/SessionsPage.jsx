@@ -25,8 +25,25 @@ function getSuggestedWorkoutKey(user) {
   return `gym_ai_suggested_workout_${user?.id || user?.email || "guest"}`;
 }
 
+function formatDateInput(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function toLocalDateKey(value) {
+  if (!value) return "";
+  return formatDateInput(new Date(value));
+}
+
+function formatFriendlyDate(dateStr) {
+  const date = new Date(`${dateStr}T12:00:00`);
+  return `${DAY_LABELS[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+}
+
 /* ── Calendar Component ─────────────────────────────────────────── */
-function WorkoutCalendar({ workouts }) {
+function WorkoutCalendar({ workouts, selectedDate, onSelectDate, onLogDate }) {
   const [viewDate, setViewDate] = useState(new Date());
 
   // Build a map of date-string → workouts
@@ -34,9 +51,8 @@ function WorkoutCalendar({ workouts }) {
     const map = {};
     workouts.forEach(w => {
       // Use created_at if available, else use today
-      const d = w.created_at ? new Date(w.created_at) : null;
-      if (!d) return;
-      const key = d.toISOString().slice(0, 10);
+      const key = toLocalDateKey(w.created_at);
+      if (!key) return;
       if (!map[key]) map[key] = [];
       map[key].push(w);
     });
@@ -47,7 +63,7 @@ function WorkoutCalendar({ workouts }) {
   const month = viewDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatDateInput();
 
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
@@ -78,16 +94,20 @@ function WorkoutCalendar({ workouts }) {
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const dayWorkouts = workoutsByDate[dateStr] || [];
           const isToday = dateStr === todayStr;
+          const isSelected = dateStr === selectedDate;
           const hasWorkout = dayWorkouts.length > 0;
 
           return (
-            <div key={dateStr} className="relative h-12 flex flex-col items-center justify-center gap-0.5 transition"
+            <button key={dateStr} type="button" onClick={() => onSelectDate(dateStr)}
+              className="relative h-12 flex flex-col items-center justify-center gap-0.5 transition"
               style={{ borderTop: idx >= 7 ? "0.5px solid rgba(255,255,255,0.04)" : "none" }}>
               <span className={`text-xs font-bold flex h-7 w-7 items-center justify-center rounded-full transition ${
                 hasWorkout ? "text-black font-black" : isToday ? "text-white" : "text-white/50"
               }`}
                 style={hasWorkout
                   ? { background: "linear-gradient(135deg, #30d158, #0a84ff)", boxShadow: "0 2px 8px rgba(48,209,88,0.4)" }
+                  : isSelected
+                  ? { background: "rgba(255,149,0,0.18)", border: "1.5px solid #ff9500", color: "#ff9500" }
                   : isToday
                   ? { background: "rgba(255,107,0,0.25)", border: "1.5px solid #ff6b00", color: "#ff6b00" }
                   : {}}>
@@ -100,10 +120,29 @@ function WorkoutCalendar({ workouts }) {
                   ))}
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {selectedDate && (
+        <div className="border-t border-white/5 px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Selected day</p>
+              <p className="text-sm font-black text-white">{formatFriendlyDate(selectedDate)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onLogDate(selectedDate)}
+              className="rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-black transition active:scale-95"
+              style={{ background: "linear-gradient(135deg,#ff6b00,#ff9500)" }}
+            >
+              + Log workout here
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex items-center gap-4 px-5 py-3 border-t border-white/5">
@@ -129,6 +168,7 @@ function SessionsPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [customName, setCustomName] = useState("Custom Workout");
   const [customNotes, setCustomNotes] = useState("");
+  const [customDate, setCustomDate] = useState(formatDateInput());
   const [customExercises, setCustomExercises] = useState([{ ...EMPTY_CUSTOM_EXERCISE }]);
   const [aiSuggestion, setAiSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -138,6 +178,7 @@ function SessionsPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState("list"); // "list" | "calendar"
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(formatDateInput());
 
   const loadWorkouts = async () => {
     setLoading(true);
@@ -181,7 +222,7 @@ function SessionsPage() {
     }
   };
 
-  const createWorkoutFromPlan = async ({ name, description, exercises }) => {
+  const createWorkoutFromPlan = async ({ name, description, exercises, performedAt }) => {
     const validExercises = exercises
       .map((exercise) => ({
         ...exercise,
@@ -196,9 +237,11 @@ function SessionsPage() {
       throw new Error("Add a workout name and at least one exercise.");
     }
 
+    const logTime = performedAt || new Date().toISOString();
     const { data: workout } = await api.post("/workouts", {
       name: name.trim(),
       description: description || "Custom workout",
+      performed_at: logTime,
     });
 
     let currentWorkout = workout;
@@ -218,6 +261,7 @@ function SessionsPage() {
             reps: repsValue,
             weight: exercise.weight,
             set_type: "normal",
+            performed_at: logTime,
           });
           currentWorkout = workoutWithSet;
         }
@@ -235,12 +279,14 @@ function SessionsPage() {
     try {
       const workout = await createWorkoutFromPlan({
         name: customName,
-        description: customNotes || "Created from custom workout builder",
+        description: customNotes || `Back-logged workout for ${formatFriendlyDate(customDate)}`,
         exercises: customExercises,
+        performedAt: `${customDate}T12:00:00`,
       });
       setCustomOpen(false);
       setCustomName("Custom Workout");
       setCustomNotes("");
+      setCustomDate(formatDateInput());
       setCustomExercises([{ ...EMPTY_CUSTOM_EXERCISE }]);
       navigate(`/workouts/${workout.id}`);
     } catch (e) {
@@ -259,6 +305,7 @@ function SessionsPage() {
         name: aiSuggestion.name,
         description: aiSuggestion.description,
         exercises: aiSuggestion.exercises || [],
+        performedAt: new Date().toISOString(),
       });
       localStorage.removeItem(getSuggestedWorkoutKey(user));
       setAiSuggestion(null);
@@ -274,6 +321,14 @@ function SessionsPage() {
     setCustomExercises((current) =>
       current.map((exercise, i) => (i === index ? { ...exercise, [key]: value } : exercise))
     );
+  };
+
+  const openCustomForDate = (dateStr) => {
+    setSelectedCalendarDate(dateStr);
+    setCustomDate(dateStr);
+    setCustomOpen(true);
+    setActiveTab("calendar");
+    setCustomName(`${formatFriendlyDate(dateStr)} Workout`);
   };
 
   const handleDelete = async (id) => {
@@ -367,6 +422,22 @@ function SessionsPage() {
                     placeholder="Friday Chest + Triceps"
                     required
                   />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-white/35">Workout date</label>
+                  <input
+                    type="date"
+                    value={customDate}
+                    onChange={(e) => {
+                      setCustomDate(e.target.value);
+                      setSelectedCalendarDate(e.target.value);
+                    }}
+                    className="input-field"
+                    required
+                  />
+                  <p className="mt-1.5 text-xs text-white/35">
+                    This session will be shown on {formatFriendlyDate(customDate)} in the calendar.
+                  </p>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-white/35">Notes</label>
@@ -550,7 +621,12 @@ function SessionsPage() {
           {/* Calendar Tab */}
           {activeTab === "calendar" && (
             <div className="ios-slide-up">
-              <WorkoutCalendar workouts={workouts} />
+              <WorkoutCalendar
+                workouts={workouts}
+                selectedDate={selectedCalendarDate}
+                onSelectDate={setSelectedCalendarDate}
+                onLogDate={openCustomForDate}
+              />
               {/* Recent workouts below calendar */}
               {workouts.length > 0 && (
                 <div className="mt-4 space-y-2">

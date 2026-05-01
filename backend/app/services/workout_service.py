@@ -34,7 +34,13 @@ def get_workout_or_404(db: Session, user: User, workout_id: int) -> Workout:
 
 
 def create_workout(db: Session, user: User, payload: WorkoutCreate) -> Workout:
-    workout = Workout(name=payload.name.strip(), description=payload.description, user_id=user.id)
+    workout = Workout(
+        name=payload.name.strip(),
+        description=payload.description,
+        user_id=user.id,
+    )
+    if payload.performed_at is not None:
+        workout.created_at = payload.performed_at
     db.add(workout)
     db.commit()
     db.refresh(workout)

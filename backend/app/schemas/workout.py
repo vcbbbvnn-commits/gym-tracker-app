@@ -8,6 +8,7 @@ from app.schemas.exercise import ExerciseRead
 class WorkoutCreate(BaseModel):
     name: str
     description: str | None = None
+    performed_at: datetime | None = None
 
 
 class WorkoutUpdate(BaseModel):
