@@ -65,6 +65,15 @@ function HomePage() {
 
   return (
     <section className="relative min-h-screen overflow-hidden" style={{ background: "#000" }}>
+      <Link
+        to="/ai"
+        className="fixed bottom-24 right-5 z-[120] flex h-14 w-14 items-center justify-center rounded-full text-sm font-black text-black shadow-2xl transition active:scale-95 xl:bottom-6"
+        style={{ background: "linear-gradient(135deg,#ff6b00,#ff9500)", boxShadow: "0 10px 30px rgba(255,107,0,0.45)" }}
+        aria-label="Open AI Coach"
+      >
+        AI
+      </Link>
+
       {/* Bodybuilder hero image */}
       <img
         src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1800&q=90&fit=crop"

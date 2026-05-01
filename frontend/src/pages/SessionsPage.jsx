@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 const SPLIT_TYPES = [
   { name: "Push",       icon: "↗️", color: "#ff6b00", desc: "Chest · Shoulders · Triceps" },
@@ -17,6 +18,12 @@ const SPLIT_TYPES = [
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const EMPTY_CUSTOM_EXERCISE = { name: "", sets: 3, reps: "8-12", weight: "" };
+
+function getSuggestedWorkoutKey(user) {
+  return `gym_ai_suggested_workout_${user?.id || user?.email || "guest"}`;
+}
 
 /* ── Calendar Component ─────────────────────────────────────────── */
 function WorkoutCalendar({ workouts }) {
@@ -115,10 +122,19 @@ function WorkoutCalendar({ workouts }) {
 
 /* ── Main Page ────────────────────────────────────────────────────── */
 function SessionsPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [workouts, setWorkouts] = useState([]);
   const [form, setForm] = useState({ name: "Push", description: "" });
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customName, setCustomName] = useState("Custom Workout");
+  const [customNotes, setCustomNotes] = useState("");
+  const [customExercises, setCustomExercises] = useState([{ ...EMPTY_CUSTOM_EXERCISE }]);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [customSubmitting, setCustomSubmitting] = useState(false);
+  const [aiStarting, setAiStarting] = useState(false);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState("list"); // "list" | "calendar"
@@ -137,6 +153,19 @@ function SessionsPage() {
 
   useEffect(() => { loadWorkouts(); }, []);
 
+  useEffect(() => {
+    const saved = localStorage.getItem(getSuggestedWorkoutKey(user));
+    if (saved) {
+      try {
+        setAiSuggestion(JSON.parse(saved));
+      } catch {
+        localStorage.removeItem(getSuggestedWorkoutKey(user));
+      }
+    } else {
+      setAiSuggestion(null);
+    }
+  }, [user]);
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -150,6 +179,101 @@ function SessionsPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const createWorkoutFromPlan = async ({ name, description, exercises }) => {
+    const validExercises = exercises
+      .map((exercise) => ({
+        ...exercise,
+        name: exercise.name.trim(),
+        sets: Math.max(1, Number(exercise.sets) || 1),
+        reps: String(exercise.reps || "10").trim(),
+        weight: Number(exercise.weight) || 0,
+      }))
+      .filter((exercise) => exercise.name);
+
+    if (!name.trim() || validExercises.length === 0) {
+      throw new Error("Add a workout name and at least one exercise.");
+    }
+
+    const { data: workout } = await api.post("/workouts", {
+      name: name.trim(),
+      description: description || "Custom workout",
+    });
+
+    let currentWorkout = workout;
+    for (const exercise of validExercises) {
+      const { data: updatedWorkout } = await api.post(`/workouts/${workout.id}/exercises`, {
+        name: exercise.name,
+        notes: `${exercise.sets} sets x ${exercise.reps} reps`,
+      });
+      currentWorkout = updatedWorkout;
+      const createdExercise = [...currentWorkout.exercises]
+        .reverse()
+        .find((item) => item.name === exercise.name);
+      const repsValue = Number(String(exercise.reps).match(/\d+/)?.[0]) || 10;
+      if (createdExercise) {
+        for (let i = 0; i < exercise.sets; i += 1) {
+          const { data: workoutWithSet } = await api.post(`/workouts/exercises/${createdExercise.id}/sets`, {
+            reps: repsValue,
+            weight: exercise.weight,
+            set_type: "normal",
+          });
+          currentWorkout = workoutWithSet;
+        }
+      }
+    }
+
+    await loadWorkouts();
+    return currentWorkout;
+  };
+
+  const handleCustomCreate = async (event) => {
+    event.preventDefault();
+    setCustomSubmitting(true);
+    setError("");
+    try {
+      const workout = await createWorkoutFromPlan({
+        name: customName,
+        description: customNotes || "Created from custom workout builder",
+        exercises: customExercises,
+      });
+      setCustomOpen(false);
+      setCustomName("Custom Workout");
+      setCustomNotes("");
+      setCustomExercises([{ ...EMPTY_CUSTOM_EXERCISE }]);
+      navigate(`/workouts/${workout.id}`);
+    } catch (e) {
+      setError(e.message || e.response?.data?.detail || "Unable to create custom workout.");
+    } finally {
+      setCustomSubmitting(false);
+    }
+  };
+
+  const handleStartAiSuggestion = async () => {
+    if (!aiSuggestion) return;
+    setAiStarting(true);
+    setError("");
+    try {
+      const workout = await createWorkoutFromPlan({
+        name: aiSuggestion.name,
+        description: aiSuggestion.description,
+        exercises: aiSuggestion.exercises || [],
+      });
+      localStorage.removeItem(getSuggestedWorkoutKey(user));
+      setAiSuggestion(null);
+      navigate(`/workouts/${workout.id}`);
+    } catch (e) {
+      setError(e.message || e.response?.data?.detail || "Unable to start AI plan.");
+    } finally {
+      setAiStarting(false);
+    }
+  };
+
+  const updateCustomExercise = (index, key, value) => {
+    setCustomExercises((current) =>
+      current.map((exercise, i) => (i === index ? { ...exercise, [key]: value } : exercise))
+    );
   };
 
   const handleDelete = async (id) => {
@@ -171,17 +295,166 @@ function SessionsPage() {
       {/* ── Page Header ── */}
       <div className="ios-slide-up">
         <span className="section-badge mb-3 inline-flex">Training</span>
-        <h1 className="text-5xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
-          My Workouts
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-          {workouts.length} session{workouts.length !== 1 ? "s" : ""} logged
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-5xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+              My Workouts
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {workouts.length} session{workouts.length !== 1 ? "s" : ""} logged
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCustomOpen((open) => !open)}
+            className="rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-wider transition active:scale-95"
+            style={{ background: "linear-gradient(135deg,#ff6b00,#ff9500)", color: "#000", boxShadow: "0 4px 16px rgba(255,107,0,0.35)" }}
+          >
+            + Custom Workout
+          </button>
+        </div>
       </div>
+
+      {aiSuggestion && (
+        <div className="ios-slide-up rounded-3xl p-5" style={{ background: "rgba(255,107,0,0.08)", border: "1px solid rgba(255,107,0,0.25)" }}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: "#ff9500" }}>AI suggested workout</p>
+              <h2 className="mt-1 text-xl font-black text-white">{aiSuggestion.name}</h2>
+              <p className="mt-1 text-sm text-white/45">{aiSuggestion.description}</p>
+              <p className="mt-2 text-xs text-white/35">
+                {(aiSuggestion.exercises || []).map((exercise) => `${exercise.name} ${exercise.sets}x${exercise.reps}`).join(" · ")}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleStartAiSuggestion}
+                disabled={aiStarting}
+                className="rounded-2xl px-5 py-3 text-sm font-black text-black transition active:scale-95 disabled:opacity-60"
+                style={{ background: "#ff9500" }}
+              >
+                {aiStarting ? "Starting..." : "Start this plan"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem(getSuggestedWorkoutKey(user));
+                  setAiSuggestion(null);
+                }}
+                className="rounded-2xl px-4 py-3 text-sm font-bold text-white/50 transition hover:bg-white/10"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         {/* ── LEFT: Create Workout ── */}
         <div className="space-y-4">
+          {customOpen && (
+            <div className="ios-slide-up rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <h2 className="mb-4 text-lg font-black text-white">Custom Workout Plan</h2>
+              <form onSubmit={handleCustomCreate} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-white/35">Workout name</label>
+                  <input
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    className="input-field"
+                    placeholder="Friday Chest + Triceps"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-white/35">Notes</label>
+                  <textarea
+                    rows={2}
+                    value={customNotes}
+                    onChange={(e) => setCustomNotes(e.target.value)}
+                    className="w-full resize-none rounded-2xl px-3 py-2.5 text-sm text-white outline-none placeholder-white/20"
+                    style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    placeholder="What are you training today?"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest text-white/35">Exercises</p>
+                    <button
+                      type="button"
+                      onClick={() => setCustomExercises((current) => [...current, { ...EMPTY_CUSTOM_EXERCISE }])}
+                      className="rounded-xl px-3 py-1.5 text-xs font-black"
+                      style={{ background: "rgba(255,107,0,0.14)", color: "#ff9500" }}
+                    >
+                      + Add
+                    </button>
+                  </div>
+                  {customExercises.map((exercise, index) => (
+                    <div key={index} className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)" }}>
+                      <input
+                        value={exercise.name}
+                        onChange={(e) => updateCustomExercise(index, "name", e.target.value)}
+                        className="mb-2 w-full rounded-xl px-3 py-2 text-sm text-white outline-none"
+                        style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+                        placeholder="Exercise name"
+                        required={index === 0}
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          value={exercise.sets}
+                          onChange={(e) => updateCustomExercise(index, "sets", e.target.value)}
+                          className="rounded-xl px-3 py-2 text-sm text-white outline-none"
+                          style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+                          placeholder="Sets"
+                        />
+                        <input
+                          value={exercise.reps}
+                          onChange={(e) => updateCustomExercise(index, "reps", e.target.value)}
+                          className="rounded-xl px-3 py-2 text-sm text-white outline-none"
+                          style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+                          placeholder="Reps"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={exercise.weight}
+                          onChange={(e) => updateCustomExercise(index, "weight", e.target.value)}
+                          className="rounded-xl px-3 py-2 text-sm text-white outline-none"
+                          style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+                          placeholder="Kg"
+                        />
+                      </div>
+                      {customExercises.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomExercises((current) => current.filter((_, i) => i !== index))}
+                          className="mt-2 text-xs font-bold text-red-400/70"
+                        >
+                          Remove exercise
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={customSubmitting}
+                  className="w-full rounded-2xl py-3.5 text-sm font-black uppercase tracking-widest transition active:scale-95 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#30d158,#0a84ff)", color: "#000" }}
+                >
+                  {customSubmitting ? "Logging..." : "Log custom workout"}
+                </button>
+              </form>
+            </div>
+          )}
+
           <div className="ios-slide-up rounded-3xl overflow-hidden"
             style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
             {/* Card accent top */}

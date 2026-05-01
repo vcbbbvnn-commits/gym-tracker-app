@@ -69,11 +69,11 @@ function Layout() {
             </div>
 
             {/* Desktop nav */}
-            <nav className="hidden items-center gap-1 lg:flex">
+            <nav className="hidden min-w-0 items-center gap-1 xl:flex">
               {DESKTOP_LINKS.map(({ to, label, icon }) => (
                 <NavLink key={to} to={to} end={to === "/"}
                   className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
-                  <span>{icon}</span>{label}
+                  <span>{icon}</span><span className="nav-label">{label}</span>
                 </NavLink>
               ))}
             </nav>
@@ -105,7 +105,7 @@ function Layout() {
         </main>
 
         {/* ── BOTTOM TAB BAR (mobile) ── */}
-        <nav className="bottom-tab-bar lg:hidden">
+        <nav className="bottom-tab-bar xl:hidden">
           {MOBILE_LINKS.map(({ to, label, icon }) => (
             <NavLink key={to} to={to} end={to === "/"}
               className={({ isActive }) => `tab-item ${isActive ? "active" : ""}`}>

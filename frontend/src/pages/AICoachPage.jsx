@@ -65,6 +65,55 @@ function getPlanKey(user) {
   return `gym_ai_plan_${user?.id || user?.email || "guest"}`;
 }
 
+function getSuggestedWorkoutKey(user) {
+  return `gym_ai_suggested_workout_${user?.id || user?.email || "guest"}`;
+}
+
+function makeSuggestedWorkout(profile) {
+  const goalLabel = profile.goal === "loss" ? "Fat Loss" : profile.goal === "gain" ? "Muscle Gain" : "Recomp";
+  const days = Number(profile.trainingDays || 4);
+
+  if (profile.goal === "loss") {
+    return {
+      name: `AI ${goalLabel} Session`,
+      description: "AI suggested workout: strength work with calorie-friendly conditioning.",
+      exercises: [
+        { name: "Goblet Squat", sets: 3, reps: "10", weight: 0 },
+        { name: "Dumbbell Bench Press", sets: 3, reps: "10", weight: 0 },
+        { name: "Lat Pulldown", sets: 3, reps: "12", weight: 0 },
+        { name: "Walking Lunges", sets: 2, reps: "12", weight: 0 },
+        { name: days >= 4 ? "Incline Treadmill Walk" : "Plank", sets: 3, reps: days >= 4 ? "10" : "45", weight: 0 },
+      ],
+    };
+  }
+
+  if (profile.goal === "gain") {
+    return {
+      name: `AI ${goalLabel} Session`,
+      description: "AI suggested workout: hypertrophy focus with progressive overload.",
+      exercises: [
+        { name: "Bench Press", sets: 4, reps: "6-8", weight: 0 },
+        { name: "Barbell Row", sets: 4, reps: "8-10", weight: 0 },
+        { name: "Overhead Press", sets: 3, reps: "8-10", weight: 0 },
+        { name: "Leg Press", sets: 4, reps: "10-12", weight: 0 },
+        { name: "Cable Curl", sets: 3, reps: "12", weight: 0 },
+      ],
+    };
+  }
+
+  return {
+    name: "AI Recomp Session",
+    description: "AI suggested workout: balanced strength and muscle-building session.",
+    exercises: [
+      { name: "Squat", sets: 3, reps: "6-8", weight: 0 },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "8-10", weight: 0 },
+      { name: "Seated Cable Row", sets: 3, reps: "10-12", weight: 0 },
+      { name: "Romanian Deadlift", sets: 3, reps: "8-10", weight: 0 },
+      { name: "Lateral Raise", sets: 3, reps: "12-15", weight: 0 },
+    ],
+  };
+}
+
 function makeFallbackPlan(profile) {
   const base = FALLBACK_PLANS[profile.goal] || FALLBACK_PLANS.recomp;
   const weeklyDays = Number(profile.trainingDays || 4);
@@ -428,6 +477,7 @@ export default function AICoachPage() {
   const completeOnboarding = (nextProfile, plan) => {
     localStorage.setItem(profileKey, JSON.stringify(nextProfile));
     localStorage.setItem(planKey, plan);
+    localStorage.setItem(getSuggestedWorkoutKey(user), JSON.stringify(makeSuggestedWorkout(nextProfile)));
     setProfile(nextProfile);
     setCustomPlan(plan);
     setShowOnboarding(false);

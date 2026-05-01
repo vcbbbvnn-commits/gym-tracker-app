@@ -252,14 +252,25 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 10px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.2s ease;
   text-decoration: none;
   letter-spacing: 0.01em;
+}
+
+.nav-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 1380px) {
+  .nav-link {
+    padding: 8px 9px;
+    font-size: 12px;
+  }
 }
 
 .nav-link:hover {
