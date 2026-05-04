@@ -39,6 +39,43 @@
   --text-tertiary:  rgba(255,255,255,0.3);
 }
 
+body.theme-light {
+  --bg-primary:   #f5f5f7;
+  --bg-card:      #ffffff;
+  --bg-card2:     #ececf0;
+  --bg-card3:     #dedee5;
+  --separator:    rgba(0,0,0,0.08);
+  --text-primary: #101014;
+  --text-secondary: rgba(0,0,0,0.58);
+  --text-tertiary: rgba(0,0,0,0.34);
+}
+
+body.theme-light {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body.theme-light .text-white {
+  color: #101014 !important;
+}
+
+body.theme-light .text-white\/75,
+body.theme-light .text-white\/70,
+body.theme-light .text-white\/65,
+body.theme-light .text-white\/60,
+body.theme-light .text-white\/55,
+body.theme-light .text-white\/50,
+body.theme-light .text-white\/45,
+body.theme-light .text-white\/40,
+body.theme-light .text-white\/35,
+body.theme-light .text-white\/30 {
+  color: rgba(0,0,0,0.55) !important;
+}
+
+body.theme-light header {
+  color: #101014;
+}
+
 /* =============================================
    BASE
    ============================================= */
@@ -238,6 +275,59 @@ body {
 }
 
 /* =============================================
+   ANIMATIONS — ios-slide-up / ios-slide-in
+   ============================================= */
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ios-slide-up {
+  animation: slideUp 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.ios-slide-in {
+  animation: slideInRight 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+.ios-fade-in {
+  animation: fadeIn 0.3s ease both;
+}
+
+/* Light theme overrides for the slide panel */
+body.theme-light aside {
+  background: #f5f5f7 !important;
+}
+body.theme-light .text-white\/40,
+body.theme-light .text-white\/35,
+body.theme-light .text-white\/30 {
+  color: rgba(0,0,0,0.45) !important;
+}
+body.theme-light .text-white\/50 {
+  color: rgba(0,0,0,0.55) !important;
+}
+body.theme-light input[class*="input-field"],
+body.theme-light .input-field {
+  background: #e5e5ea;
+  color: #101014;
+}
+body.theme-light .input-field:focus {
+  background: #d1d1d6;
+  box-shadow: 0 0 0 2px #ff6b00;
+}
+
+/* =============================================
    FIRE DIVIDER
    ============================================= */
 .fire-divider {
@@ -401,6 +491,15 @@ button:focus-visible, a:focus-visible {
 
 .ios-slide-up {
   animation: iosSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes iosSlideIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ios-slide-in {
+  animation: iosSlideIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* =============================================
