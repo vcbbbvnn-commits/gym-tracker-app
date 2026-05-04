@@ -186,6 +186,12 @@ function TemplatesPage() {
   const [templates,setTemplates]       = useState([]);
   const [activeId,setActiveId]         = useState(null);
   const [expandedDays,setExpandedDays] = useState({});
+  const [builderOpen,setBuilderOpen]   = useState(false);
+  const [templateName,setTemplateName] = useState("My Custom Split");
+  const [templateDays,setTemplateDays] = useState(3);
+  const [templateExercises,setTemplateExercises] = useState([
+    { name:"Bench Press", recommended_sets:3, recommended_reps:"8-10", day_number:1, order:1 },
+  ]);
   const [loading,setLoading]           = useState(true);
   const [error,setError]               = useState(null);
   const [startingKey,setStartingKey]   = useState(null);
@@ -219,6 +225,37 @@ function TemplatesPage() {
     } finally{ setStartingKey(null); }
   };
 
+  const handleTemplateExercise = (index, key, value) => {
+    setTemplateExercises((current) => current.map((item, i) => i === index ? { ...item, [key]: value } : item));
+  };
+
+  const saveTemplate = async(e)=>{
+    e.preventDefault();
+    try {
+      const exercises = templateExercises
+        .filter(ex => ex.name.trim())
+        .map((ex, index) => ({
+          ...ex,
+          name: ex.name.trim(),
+          recommended_sets: Number(ex.recommended_sets) || 3,
+          day_number: Number(ex.day_number) || 1,
+          order: index + 1,
+        }));
+      const { data } = await api.post("/templates", {
+        name: templateName.trim(),
+        description: "Reusable custom template created in the app.",
+        category: "Custom",
+        duration_days: Number(templateDays),
+        exercises,
+      });
+      setTemplates((current) => [...current, data]);
+      setActiveId(data.id);
+      setBuilderOpen(false);
+    } catch(e) {
+      setError(e.response?.data?.detail || "Failed to save custom template.");
+    }
+  };
+
   if(loading) return(
     <div className="flex min-h-[60vh] items-center justify-center flex-col gap-4">
       <div className="h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
@@ -242,6 +279,11 @@ function TemplatesPage() {
               Train by muscle group, movement pattern, or recovery rhythm.
             </p>
           </div>
+          <button type="button" onClick={()=>setBuilderOpen(v=>!v)}
+            className="rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-wider text-black"
+            style={{background:"linear-gradient(135deg,#30d158,#0a84ff)"}}>
+            + Template Builder
+          </button>
           {/* Tab switcher */}
           <div className="flex gap-2 rounded-2xl p-1.5 shrink-0"
             style={{background:"#1c1c1e"}}>
@@ -260,6 +302,48 @@ function TemplatesPage() {
           </div>
         </div>
       </section>
+
+      {builderOpen && (
+        <section className="mb-8 rounded-3xl p-5" style={{background:"#1c1c1e",border:"1px solid rgba(255,255,255,0.08)"}}>
+          <h2 className="mb-4 text-xl font-black text-white">Reusable Template Builder</h2>
+          <form onSubmit={saveTemplate} className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+              <input value={templateName} onChange={e=>setTemplateName(e.target.value)}
+                className="input-field" placeholder="Template name" required />
+              <select value={templateDays} onChange={e=>setTemplateDays(e.target.value)}
+                className="input-field">
+                {[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>{d} days</option>)}
+              </select>
+            </div>
+            <div className="space-y-3">
+              {templateExercises.map((ex,index)=>(
+                <div key={index} className="grid gap-2 rounded-2xl p-3 sm:grid-cols-[1fr_90px_100px_90px_auto]" style={{background:"rgba(255,255,255,0.04)"}}>
+                  <input value={ex.name} onChange={e=>handleTemplateExercise(index,"name",e.target.value)}
+                    className="rounded-xl px-3 py-2 text-sm text-white outline-none" style={{background:"rgba(0,0,0,0.35)"}} placeholder="Exercise" />
+                  <input type="number" min="1" max={templateDays} value={ex.day_number}
+                    onChange={e=>handleTemplateExercise(index,"day_number",e.target.value)}
+                    className="rounded-xl px-3 py-2 text-sm text-white outline-none" style={{background:"rgba(0,0,0,0.35)"}} placeholder="Day" />
+                  <input type="number" min="1" value={ex.recommended_sets}
+                    onChange={e=>handleTemplateExercise(index,"recommended_sets",e.target.value)}
+                    className="rounded-xl px-3 py-2 text-sm text-white outline-none" style={{background:"rgba(0,0,0,0.35)"}} placeholder="Sets" />
+                  <input value={ex.recommended_reps}
+                    onChange={e=>handleTemplateExercise(index,"recommended_reps",e.target.value)}
+                    className="rounded-xl px-3 py-2 text-sm text-white outline-none" style={{background:"rgba(0,0,0,0.35)"}} placeholder="Reps" />
+                  <button type="button" onClick={()=>setTemplateExercises(c=>c.filter((_,i)=>i!==index))}
+                    className="rounded-xl px-3 py-2 text-xs font-bold text-red-400">Remove</button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={()=>setTemplateExercises(c=>[...c,{name:"",recommended_sets:3,recommended_reps:"8-12",day_number:1,order:c.length+1}])}
+                className="rounded-2xl px-4 py-3 text-sm font-black text-white/70" style={{background:"rgba(255,255,255,0.06)"}}>
+                Add Exercise
+              </button>
+              <button type="submit" className="btn-fire flex-1 justify-center">Save Template</button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {error && <div className="mb-6 rounded-2xl px-5 py-4 text-sm text-red-400"
         style={{background:"rgba(255,69,58,0.1)",border:"1px solid rgba(255,69,58,0.2)"}}>{error}</div>}

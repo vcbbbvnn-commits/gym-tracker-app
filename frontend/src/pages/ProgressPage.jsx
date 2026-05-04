@@ -121,6 +121,10 @@ function ProgressPage() {
 
   const latestWeight = bodyWeights.length ? bodyWeights[bodyWeights.length - 1].weight_kg : null;
   const bwChartData = bodyWeights.slice(-14).map(b => ({ value: b.weight_kg, label: new Date(b.logged_at).toLocaleDateString() }));
+  const personalRecords = exerciseProgress
+    .slice()
+    .sort((a, b) => b.best_weight - a.best_weight)
+    .slice(0, 6);
 
   return (
     <div className="space-y-8">
@@ -152,6 +156,42 @@ function ProgressPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {stats.map((s) => <StatCard key={s.label} {...s} />)}
+          </div>
+        )}
+      </section>
+
+      {/* Personal Records */}
+      <section>
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h2 className="text-lg font-black text-white">Personal Records</h2>
+            <p className="text-sm text-white/35">Your strongest logged lifts.</p>
+          </div>
+          <Link to="/strength" className="rounded-xl px-3 py-2 text-xs font-black text-black" style={{ background: "#ffd60a" }}>
+            Score
+          </Link>
+        </div>
+        {personalRecords.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {personalRecords.map((record, index) => (
+              <Link
+                key={record.exercise_name}
+                to={`/progress/${encodeURIComponent(record.exercise_name)}`}
+                className="rounded-2xl p-4 no-underline transition hover:-translate-y-1"
+                style={{ background: "#1c1c1e", border: index === 0 ? "1px solid rgba(255,214,10,0.35)" : "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: index === 0 ? "#ffd60a" : "rgba(255,255,255,0.35)" }}>
+                  PR #{index + 1}
+                </p>
+                <h3 className="mt-2 truncate text-sm font-black text-white">{record.exercise_name}</h3>
+                <p className="mt-2 text-3xl font-black" style={{ color: "#ff6b00" }}>{record.best_weight}kg</p>
+                <p className="text-xs text-white/35">{record.total_sets} sets · {Math.round(record.total_volume).toLocaleString()}kg volume</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl p-6 text-sm text-white/35" style={{ background: "#1c1c1e" }}>
+            Log sets with weight to unlock PR cards.
           </div>
         )}
       </section>

@@ -1,276 +1,243 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const AI_ENDPOINT = "https://text.pollinations.ai/";
 
-const PROGRAMS = [
-  {
-    id: "bro",
-    name: "Bro Split",
-    icon: "💪",
-    color: "#ff6b00",
-    days: 5,
-    desc: "Classic bodybuilder split",
-    schedule: [
-      { day: "Mon", focus: "Chest", icon: "🏋️", color: "#0a84ff" },
-      { day: "Tue", focus: "Back", icon: "↙️", color: "#30d158" },
-      { day: "Wed", focus: "Shoulders", icon: "🎯", color: "#bf5af2" },
-      { day: "Thu", focus: "Legs", icon: "🦵", color: "#ff6b00" },
-      { day: "Fri", focus: "Arms", icon: "💪", color: "#ff375f" },
-      { day: "Sat", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Sun", focus: "Rest", icon: "😴", color: "#8e8e93" },
-    ],
-  },
-  {
-    id: "ppl",
-    name: "Push Pull Legs",
-    icon: "🔄",
-    color: "#0a84ff",
-    days: 6,
-    desc: "Efficient 6-day program",
-    schedule: [
-      { day: "Mon", focus: "Push", icon: "↗️", color: "#ff6b00" },
-      { day: "Tue", focus: "Pull", icon: "↙️", color: "#0a84ff" },
-      { day: "Wed", focus: "Legs", icon: "🦵", color: "#30d158" },
-      { day: "Thu", focus: "Push", icon: "↗️", color: "#ff6b00" },
-      { day: "Fri", focus: "Pull", icon: "↙️", color: "#0a84ff" },
-      { day: "Sat", focus: "Legs", icon: "🦵", color: "#30d158" },
-      { day: "Sun", focus: "Rest", icon: "😴", color: "#8e8e93" },
-    ],
-  },
-  {
-    id: "ul",
-    name: "Upper / Lower",
-    icon: "⬆️",
-    color: "#30d158",
-    days: 4,
-    desc: "Great for beginners & intermediate",
-    schedule: [
-      { day: "Mon", focus: "Upper", icon: "🧥", color: "#bf5af2" },
-      { day: "Tue", focus: "Lower", icon: "🦵", color: "#ff6b00" },
-      { day: "Wed", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Thu", focus: "Upper", icon: "🧥", color: "#bf5af2" },
-      { day: "Fri", focus: "Lower", icon: "🦵", color: "#ff6b00" },
-      { day: "Sat", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Sun", focus: "Rest", icon: "😴", color: "#8e8e93" },
-    ],
-  },
-  {
-    id: "fullbody",
-    name: "Full Body",
-    icon: "💥",
-    color: "#ffd60a",
-    days: 3,
-    desc: "Maximum efficiency, 3×/week",
-    schedule: [
-      { day: "Mon", focus: "Full Body", icon: "💥", color: "#ffd60a" },
-      { day: "Tue", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Wed", focus: "Full Body", icon: "💥", color: "#ffd60a" },
-      { day: "Thu", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Fri", focus: "Full Body", icon: "💥", color: "#ffd60a" },
-      { day: "Sat", focus: "Rest", icon: "😴", color: "#8e8e93" },
-      { day: "Sun", focus: "Rest", icon: "😴", color: "#8e8e93" },
-    ],
-  },
-];
+function getProfileKey(user) {
+  return `gym_ai_profile_${user?.id || user?.email || "guest"}`;
+}
+
+function dateKey(value) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getStreak(workouts) {
+  const days = new Set(workouts.filter((w) => w.created_at).map((w) => dateKey(w.created_at)));
+  let current = 0;
+  const cursor = new Date();
+  while (days.has(dateKey(cursor))) {
+    current += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let longest = 0;
+  let run = 0;
+  const sorted = [...days].sort();
+  sorted.forEach((day, index) => {
+    if (index === 0) {
+      run = 1;
+    } else {
+      const prev = new Date(`${sorted[index - 1]}T12:00:00`);
+      const now = new Date(`${day}T12:00:00`);
+      const diff = Math.round((now - prev) / 86400000);
+      run = diff === 1 ? run + 1 : 1;
+    }
+    longest = Math.max(longest, run);
+  });
+  return { current, longest };
+}
+
+function makePlan(profile, workoutsThisWeek) {
+  const goal = profile?.goal || "recomp";
+  const days = Number(profile?.trainingDays || 4);
+  const base =
+    goal === "loss"
+      ? ["Full Body", "Zone 2 + Core", "Upper", "Rest", "Lower", "Cardio", "Rest"]
+      : goal === "gain"
+        ? ["Push", "Pull", "Legs", "Rest", "Upper Pump", "Lower Pump", "Rest"]
+        : ["Upper", "Lower", "Rest", "Push", "Pull + Legs", "Rest", "Mobility"];
+
+  return DAYS.map((day, i) => ({
+    day,
+    focus: i < days ? base[i] : "Rest",
+    today: i === (new Date().getDay() + 6) % 7,
+    done: workoutsThisWeek.some((w) => new Date(w.created_at).getDay() === ((i + 1) % 7)),
+  }));
+}
+
+function calcNutrition(profile) {
+  const weight = Number(profile?.currentWeight || 70);
+  const goal = profile?.goal || "recomp";
+  const protein = Math.round(weight * (goal === "loss" ? 2 : 1.8));
+  const calories =
+    goal === "loss"
+      ? Math.round(weight * 28)
+      : goal === "gain"
+        ? Math.round(weight * 36)
+        : Math.round(weight * 32);
+  return {
+    calories,
+    protein,
+    carbs: Math.round((calories * 0.45) / 4),
+    fats: Math.round((calories * 0.25) / 9),
+  };
+}
+
+function SmartCard({ title, value, sub, color = "#ff6b00" }) {
+  return (
+    <div className="rounded-2xl p-4" style={{ background: "#1c1c1e", border: `1px solid ${color}25` }}>
+      <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{title}</p>
+      <p className="mt-2 text-3xl font-black" style={{ color }}>{value}</p>
+      <p className="mt-1 text-xs leading-5 text-white/40">{sub}</p>
+    </div>
+  );
+}
 
 export default function CoachPage() {
+  const { user } = useAuth();
   const [workouts, setWorkouts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProgram, setSelectedProgram] = useState("ppl");
+  const [bodyWeights, setBodyWeights] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [reminder, setReminder] = useState(() => localStorage.getItem("gym_training_reminder") || "18:00");
+  const [effort, setEffort] = useState("normal");
+  const [mealPlan, setMealPlan] = useState("");
+  const [mealLoading, setMealLoading] = useState(false);
 
   useEffect(() => {
-    api.get("/workouts")
-      .then(r => setWorkouts(r.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    api.get("/workouts").then((r) => setWorkouts(r.data || [])).catch(() => {});
+    api.get("/body-weight").then((r) => setBodyWeights(r.data || [])).catch(() => {});
+    const saved = localStorage.getItem(getProfileKey(user));
+    if (saved) setProfile(JSON.parse(saved));
+  }, [user]);
 
-  const program = PROGRAMS.find(p => p.id === selectedProgram);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const workoutsThisWeek = workouts.filter((w) => w.created_at && new Date(w.created_at).getTime() > weekAgo);
+  const setsThisWeek = workoutsThisWeek.reduce((t, w) => t + (w.exercises?.reduce((s, e) => s + e.sets.length, 0) || 0), 0);
+  const streak = getStreak(workouts);
+  const weeklyPlan = makePlan(profile, workoutsThisWeek);
+  const nutrition = calcNutrition(profile);
+  const latest = workouts[0];
+  const latestSets = latest?.exercises?.reduce((t, e) => t + e.sets.length, 0) || 0;
+  const latestVolume = latest?.exercises?.reduce((t, e) => t + e.sets.reduce((s, set) => s + set.reps * set.weight, 0), 0) || 0;
+  const recoveryScore = Math.max(8, Math.min(100, 100 - workoutsThisWeek.length * 8 - Math.max(0, setsThisWeek - 45)));
+  const recoveryColor = recoveryScore > 70 ? "#30d158" : recoveryScore > 45 ? "#ff9500" : "#ff375f";
+  const latestWeight = bodyWeights.length ? bodyWeights[bodyWeights.length - 1].weight_kg : profile?.currentWeight;
+  const targetWeight = profile?.targetWeight;
 
-  // Recovery analysis from recent workouts
-  const { workoutsThisWeek, totalSetsThisWeek, recoveryStatus, recoveryColor, recoveryMsg } = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recent = workouts.filter(w => {
-      if (!w.created_at) return false;
-      return new Date(w.created_at).getTime() > weekAgo;
-    });
-    const sets = recent.reduce((t, w) => t + (w.exercises?.reduce((e, ex) => e + ex.sets.length, 0) || 0), 0);
-    let status = "Ready to Train", color = "#30d158", msg = "You're well rested and ready for an intense session!";
-    if (recent.length >= 6) { status = "Needs Recovery"; color = "#ff375f"; msg = "High training frequency detected. Consider a deload this week."; }
-    else if (recent.length >= 4) { status = "Normal Load"; color = "#ff9500"; msg = "Good training volume. Stay consistent."; }
-    return { workoutsThisWeek: recent.length, totalSetsThisWeek: sets, recoveryStatus: status, recoveryColor: color, recoveryMsg: msg };
-  }, [workouts]);
+  const autoAdjust =
+    effort === "easy"
+      ? "Next session: add 2.5kg to compound lifts or add 1-2 reps per set."
+      : effort === "hard"
+        ? "Next session: repeat the same weight and try to improve form or reps."
+        : effort === "failed"
+          ? "Next session: reduce weight by 5-10% and keep the same exercises."
+          : "Next session: progress only if all working sets were clean.";
 
-  // Achievements
-  const achievements = useMemo(() => {
-    const all = [];
-    const totalSets = workouts.reduce((t, w) => t + (w.exercises?.reduce((e, ex) => e + ex.sets.length, 0) || 0), 0);
-    if (workouts.length >= 1) all.push({ icon: "🏆", title: "First Workout!", desc: "You started your journey." });
-    if (workouts.length >= 10) all.push({ icon: "🔥", title: "10 Workouts!", desc: "Consistency is key." });
-    if (workouts.length >= 30) all.push({ icon: "💎", title: "30 Workouts!", desc: "You're a regular!" });
-    if (totalSets >= 100) all.push({ icon: "💪", title: "100 Sets!", desc: "Serious volume logged." });
-    if (totalSets >= 500) all.push({ icon: "⚡", title: "500 Sets!", desc: "Elite dedication!" });
-    return all;
-  }, [workouts]);
+  const saveReminder = (value) => {
+    setReminder(value);
+    localStorage.setItem("gym_training_reminder", value);
+  };
 
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
+  const generateMeals = async () => {
+    setMealLoading(true);
+    try {
+      const response = await fetch(AI_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai",
+          private: true,
+          messages: [{ role: "user", content: `Create a concise gym diet plan for ${profile?.goal || "recomp"}, ${latestWeight || 70}kg, target ${targetWeight || "not set"}kg. Include calories, protein, and 3 simple meals under 120 words.` }],
+        }),
+      });
+      setMealPlan((await response.text()).trim());
+    } catch {
+      setMealPlan(`Calories: ${nutrition.calories}. Protein: ${nutrition.protein}g. Meals: eggs/oats, chicken rice bowl, paneer or fish with vegetables. Keep water high and adjust portions weekly.`);
+    } finally {
+      setMealLoading(false);
+    }
+  };
+
+  const shareText = latest
+    ? `Workout complete: ${latest.name}\nSets: ${latestSets}\nVolume: ${Math.round(latestVolume).toLocaleString()} kg\nStreak: ${streak.current} days`
+    : "No workout completed yet.";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 pb-10">
-      {/* Header */}
+    <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <div className="ios-slide-up">
-        <span className="section-badge mb-3 inline-flex">Coach</span>
-        <h1 className="text-5xl font-black uppercase text-white" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
-          Your Coach
+        <span className="section-badge mb-3 inline-flex">Smart Coach</span>
+        <h1 className="text-5xl font-black uppercase text-white md:text-7xl" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+          Coaching Hub
         </h1>
-        <p className="mt-1 text-sm text-white/40">Adaptive routines that evolve with you.</p>
+        <p className="mt-1 text-sm text-white/40">Recovery, streaks, diet, weekly planning, reminders, and workout adjustments.</p>
       </div>
 
-      {/* Recovery Zone */}
-      <div className="ios-slide-up rounded-3xl p-5"
-        style={{ background: "#1c1c1e", border: `1px solid ${recoveryColor}30`, animationDelay: "60ms" }}>
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/35 mb-1">Recovery Zone</p>
-            <p className="text-base font-black" style={{ color: recoveryColor }}>● {recoveryStatus}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-black text-white">{workoutsThisWeek}</p>
-            <p className="text-[10px] text-white/35">workouts this week</p>
-          </div>
-        </div>
-        <p className="text-sm text-white/55">{recoveryMsg}</p>
-        {workoutsThisWeek >= 6 && (
-          <div className="mt-3 rounded-2xl px-4 py-3 flex items-center gap-3"
-            style={{ background: "rgba(255,55,95,0.1)", border: "1px solid rgba(255,55,95,0.25)" }}>
-            <span className="text-xl">⚠️</span>
-            <p className="text-sm font-bold text-white/80">
-              Deload suggestion: Reduce weights by 40% this week for full recovery.
-            </p>
-          </div>
-        )}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
-            <p className="text-xl font-black text-white">{totalSetsThisWeek}</p>
-            <p className="text-[10px] text-white/35">Sets this week</p>
-          </div>
-          <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
-            <p className="text-xl font-black text-white">{workouts.length}</p>
-            <p className="text-[10px] text-white/35">Total sessions</p>
-          </div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        <SmartCard title="Current streak" value={`${streak.current}d`} sub={`Longest streak: ${streak.longest} days`} color="#ff6b00" />
+        <SmartCard title="Recovery score" value={recoveryScore} sub={recoveryScore > 70 ? "Ready to train hard." : "Control intensity today."} color={recoveryColor} />
+        <SmartCard title="This week" value={workoutsThisWeek.length} sub={`${setsThisWeek} sets logged this week`} color="#0a84ff" />
+        <SmartCard title="Body target" value={latestWeight ? `${latestWeight}kg` : "--"} sub={targetWeight ? `Goal: ${targetWeight}kg` : "Set goal in AI Coach"} color="#30d158" />
       </div>
 
-      {/* Achievements */}
-      {achievements.length > 0 && (
-        <div className="ios-slide-up" style={{ animationDelay: "120ms" }}>
-          <p className="text-[10px] uppercase tracking-widest mb-3 px-1 text-white/35">🏆 Achievements Unlocked</p>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-            {achievements.map((a, i) => (
-              <div key={i} className="flex-shrink-0 rounded-2xl p-4 text-center w-28"
-                style={{ background: "rgba(255,214,10,0.08)", border: "1px solid rgba(255,214,10,0.2)" }}>
-                <p className="text-2xl mb-1">{a.icon}</p>
-                <p className="text-xs font-black text-white leading-tight">{a.title}</p>
-                <p className="text-[9px] mt-1 text-white/40">{a.desc}</p>
+      <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">AI weekly plan</p>
+              <h2 className="text-xl font-black text-white">This Week</h2>
+            </div>
+            <Link to="/ai" className="rounded-xl px-3 py-2 text-xs font-black text-black" style={{ background: "#ff9500" }}>Adjust with AI</Link>
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {weeklyPlan.map((item) => (
+              <div key={item.day} className="rounded-2xl p-3 text-center" style={{ background: item.today ? "rgba(255,107,0,0.15)" : "rgba(255,255,255,0.04)", border: item.done ? "1px solid rgba(48,209,88,0.45)" : "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="text-[10px] font-black text-white/35">{item.day}</p>
+                <p className="mt-2 text-xs font-black text-white">{item.focus}</p>
+                {item.done && <p className="mt-1 text-[10px]" style={{ color: "#30d158" }}>Done</p>}
               </div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Program Picker */}
-      <div className="ios-slide-up" style={{ animationDelay: "160ms" }}>
-        <p className="text-[10px] uppercase tracking-widest mb-3 px-1 text-white/35">Choose Your Program</p>
-        <div className="grid grid-cols-2 gap-3">
-          {PROGRAMS.map(p => (
-            <button key={p.id} onClick={() => setSelectedProgram(p.id)}
-              className="rounded-2xl p-4 text-left transition-all active:scale-95"
-              style={selectedProgram === p.id
-                ? { background: `${p.color}14`, border: `1.5px solid ${p.color}55`, boxShadow: `0 0 20px ${p.color}20` }
-                : { background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{p.icon}</span>
-                <div className="h-2 w-2 rounded-full" style={{ background: selectedProgram === p.id ? p.color : "rgba(255,255,255,0.1)" }} />
-              </div>
-              <p className="text-sm font-black text-white">{p.name}</p>
-              <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{p.days} days/week · {p.desc}</p>
-            </button>
-          ))}
+        <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Workout reminder</p>
+          <h2 className="mt-1 text-xl font-black text-white">Daily Training Alert</h2>
+          <input type="time" value={reminder} onChange={(e) => saveReminder(e.target.value)} className="input-field mt-4" />
+          <p className="mt-3 text-xs leading-5 text-white/40">Saved in this browser. Use this as your daily training time until push notifications are added.</p>
         </div>
-      </div>
+      </section>
 
-      {/* Weekly Plan */}
-      {program && (
-        <div className="ios-slide-up rounded-3xl overflow-hidden" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)", animationDelay: "200ms" }}>
-          <div className="h-0.5" style={{ background: `linear-gradient(90deg,${program.color},transparent)` }} />
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-white/35">Your Week — {program.name}</p>
-              <span className="text-xs font-black text-white/40">{program.days}×/week</span>
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {program.schedule.map((s, i) => {
-                const isToday = i === todayIdx;
-                const isRest = s.focus === "Rest";
-                return (
-                  <div key={i} className="flex flex-col items-center gap-1">
-                    <p className="text-[9px] font-bold uppercase" style={{ color: isToday ? program.color : "rgba(255,255,255,0.3)" }}>
-                      {s.day}
-                    </p>
-                    <div className="w-full aspect-square rounded-xl flex items-center justify-center text-base transition"
-                      style={{
-                        background: isToday ? `${s.color}20` : isRest ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
-                        border: isToday ? `1.5px solid ${s.color}60` : "1px solid rgba(255,255,255,0.06)",
-                      }}>
-                      {s.icon}
-                    </div>
-                    <p className="text-[8px] text-center leading-tight" style={{ color: isRest ? "rgba(255,255,255,0.2)" : isToday ? s.color : "rgba(255,255,255,0.5)" }}>
-                      {s.focus}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Today's focus */}
-            {program.schedule[todayIdx]?.focus !== "Rest" && (
-              <div className="mt-4 rounded-2xl p-4 flex items-center gap-3"
-                style={{ background: `${program.schedule[todayIdx].color}10`, border: `1px solid ${program.schedule[todayIdx].color}30` }}>
-                <span className="text-2xl">{program.schedule[todayIdx].icon}</span>
-                <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Today's Training</p>
-                  <p className="font-black text-white">{program.schedule[todayIdx].focus} Day</p>
-                </div>
-                <Link to="/templates"
-                  className="rounded-xl px-4 py-2 text-xs font-black text-black transition"
-                  style={{ background: `linear-gradient(135deg,${program.schedule[todayIdx].color},${program.schedule[todayIdx].color}bb)` }}>
-                  Start →
-                </Link>
-              </div>
-            )}
+      <section className="grid gap-5 lg:grid-cols-3">
+        <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Diet target</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <SmartCard title="Calories" value={nutrition.calories} sub="Daily target" color="#ff9500" />
+            <SmartCard title="Protein" value={`${nutrition.protein}g`} sub="Daily minimum" color="#30d158" />
+            <SmartCard title="Carbs" value={`${nutrition.carbs}g`} sub="Training fuel" color="#0a84ff" />
+            <SmartCard title="Fats" value={`${nutrition.fats}g`} sub="Hormones/recovery" color="#bf5af2" />
           </div>
+          <button onClick={generateMeals} disabled={mealLoading} className="btn-fire mt-4 w-full justify-center">
+            {mealLoading ? "Generating..." : "Generate meal ideas"}
+          </button>
+          {mealPlan && <p className="mt-4 rounded-2xl p-4 text-sm leading-6 text-white/60" style={{ background: "rgba(255,255,255,0.04)" }}>{mealPlan}</p>}
         </div>
-      )}
 
-      {/* Auto-Progression Tips */}
-      <div className="ios-slide-up rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.06)", animationDelay: "240ms" }}>
-        <p className="text-[10px] uppercase tracking-widest text-white/35 mb-4">🤖 Auto-Progression Rules</p>
-        <div className="space-y-3">
-          {[
-            { icon: "⬆️", rule: "Add 2.5kg when you hit the top of your rep range for all sets" },
-            { icon: "🔁", rule: "Repeat weight when you can't complete all reps" },
-            { icon: "🔽", rule: "Drop weight 10% if you fail 2 sessions in a row" },
-            { icon: "😴", rule: "Schedule a deload every 4–6 weeks (40% volume reduction)" },
-          ].map((t, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="text-lg mt-0.5">{t.icon}</span>
-              <p className="text-sm text-white/60 leading-relaxed">{t.rule}</p>
-            </div>
-          ))}
+        <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Auto-adjust plan</p>
+          <h2 className="mt-1 text-xl font-black text-white">How was your last workout?</h2>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {["easy", "normal", "hard", "failed"].map((item) => (
+              <button key={item} onClick={() => setEffort(item)} className="rounded-2xl px-3 py-3 text-sm font-black capitalize" style={effort === item ? { background: "#ff6b00", color: "#000" } : { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
+                {item}
+              </button>
+            ))}
+          </div>
+          <p className="mt-4 rounded-2xl p-4 text-sm leading-6 text-white/60" style={{ background: "rgba(255,255,255,0.04)" }}>{autoAdjust}</p>
         </div>
-      </div>
+
+        <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Share card</p>
+          <h2 className="mt-1 text-xl font-black text-white">Latest Workout</h2>
+          <pre className="mt-4 whitespace-pre-wrap rounded-2xl p-4 text-sm leading-6 text-white/70" style={{ background: "rgba(255,255,255,0.04)" }}>{shareText}</pre>
+          <button type="button" onClick={() => navigator.clipboard?.writeText(shareText)} className="mt-4 w-full rounded-2xl py-3 text-sm font-black text-black" style={{ background: "#30d158" }}>
+            Copy share text
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

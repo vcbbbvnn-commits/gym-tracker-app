@@ -27,6 +27,24 @@ const EQUIPMENT_ICONS = {
 
 const LEVEL_COLOR = { beginner: "#30d158", intermediate: "#ff9500", expert: "#ff375f" };
 
+function getFormGuide(ex) {
+  const name = ex.name.toLowerCase();
+  const muscle = ex.primaryMuscles?.[0] || "target muscle";
+  if (name.includes("squat")) {
+    return { tips: ["Brace before each rep", "Keep knees tracking over toes", "Control the descent"], mistakes: ["Heels lifting", "Knees collapsing inward", "Losing back tightness"] };
+  }
+  if (name.includes("bench") || name.includes("press")) {
+    return { tips: ["Pin shoulder blades back", "Use a controlled touch point", "Drive feet into the floor"], mistakes: ["Bouncing the weight", "Flaring elbows too wide", "Losing wrist alignment"] };
+  }
+  if (name.includes("deadlift")) {
+    return { tips: ["Pull slack out of the bar", "Keep lats tight", "Push the floor away"], mistakes: ["Rounding the lower back", "Bar drifting away", "Jerking from a loose setup"] };
+  }
+  if (name.includes("row") || name.includes("pulldown") || name.includes("pull-up")) {
+    return { tips: ["Lead with elbows", "Pause briefly at contraction", "Keep ribs down"], mistakes: ["Using momentum", "Shrugging every rep", "Cutting range of motion short"] };
+  }
+  return { tips: [`Keep tension on the ${muscle}`, "Control both lifting and lowering", "Stop before form breaks"], mistakes: ["Rushing reps", "Using weight you cannot control", "Letting joints drift out of position"] };
+}
+
 const MUSCLE_GROUPS = [
   "All", "chest", "biceps", "triceps", "shoulders", "abdominals",
   "quadriceps", "hamstrings", "glutes", "calves", "middle back",
@@ -126,6 +144,7 @@ function ExerciseModal({ ex, onClose }) {
   const color = MUSCLE_COLORS[muscle] || "#ff6b00";
   const ytQuery = encodeURIComponent(`${ex.name} exercise form technique`);
   const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
+  const guide = getFormGuide(ex);
 
   return (
     <div
@@ -233,6 +252,21 @@ function ExerciseModal({ ex, onClose }) {
               </ol>
             </div>
           )}
+
+          <div className="mb-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl p-4" style={{ background: "rgba(48,209,88,0.07)", border: "1px solid rgba(48,209,88,0.18)" }}>
+              <p className="mb-3 text-[10px] font-black uppercase tracking-widest" style={{ color: "#30d158" }}>Form tips</p>
+              <ul className="space-y-2">
+                {guide.tips.map((tip) => <li key={tip} className="text-sm text-white/65">- {tip}</li>)}
+              </ul>
+            </div>
+            <div className="rounded-2xl p-4" style={{ background: "rgba(255,55,95,0.07)", border: "1px solid rgba(255,55,95,0.18)" }}>
+              <p className="mb-3 text-[10px] font-black uppercase tracking-widest" style={{ color: "#ff375f" }}>Avoid</p>
+              <ul className="space-y-2">
+                {guide.mistakes.map((tip) => <li key={tip} className="text-sm text-white/65">- {tip}</li>)}
+              </ul>
+            </div>
+          </div>
 
           {/* ── Watch on YouTube button ── */}
           <a

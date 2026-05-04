@@ -19,6 +19,20 @@ def get_templates(db: Session = Depends(get_db)):
     return templates
 
 
+@router.post("/templates", response_model=WorkoutTemplateResponse)
+def create_custom_template(
+    payload: WorkoutTemplateCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create a reusable custom workout template."""
+    template = template_service.create_workout_template(db, payload)
+    template.is_preset = False
+    db.commit()
+    db.refresh(template)
+    return template
+
+
 @router.get("/templates/{template_id}", response_model=WorkoutTemplateResponse)
 def get_template(template_id: int, db: Session = Depends(get_db)):
     """Get a specific workout template."""
