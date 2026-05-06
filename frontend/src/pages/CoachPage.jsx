@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -89,6 +89,7 @@ function SmartCard({ title, value, sub, color = "#ff6b00" }) {
 
 export default function CoachPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [workouts, setWorkouts] = useState([]);
   const [bodyWeights, setBodyWeights] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -96,6 +97,18 @@ export default function CoachPage() {
   const [effort, setEffort] = useState("normal");
   const [mealPlan, setMealPlan] = useState("");
   const [mealLoading, setMealLoading] = useState(false);
+
+  // Calendar state
+  const [showCal, setShowCal] = useState(false);
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(null);
+  // Log-workout modal state
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logDate, setLogDate] = useState(null);
+  const [logName, setLogName] = useState("");
+  const [logExercises, setLogExercises] = useState([{ name: "", sets: 3, reps: 10, weight: 0 }]);
+  const [logSaving, setLogSaving] = useState(false);
 
   useEffect(() => {
     api.get("/workouts").then((r) => setWorkouts(r.data || [])).catch(() => {});
@@ -152,6 +165,63 @@ export default function CoachPage() {
     }
   };
 
+  // Calendar helpers
+  const workoutDates = useMemo(() => {
+    const m = {};
+    workouts.forEach(w => { if (w.created_at) { const k = dateKey(w.created_at); m[k] = m[k] ? [...m[k], w] : [w]; } });
+    return m;
+  }, [workouts]);
+
+  const calDays = useMemo(() => {
+    const first = new Date(calYear, calMonth, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < startDay; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    return cells;
+  }, [calMonth, calYear]);
+
+  const calMonthName = new Date(calYear, calMonth).toLocaleString("default", { month: "long", year: "numeric" });
+
+  const openLogModal = (date) => {
+    setLogDate(date);
+    setLogName("");
+    setLogExercises([{ name: "", sets: 3, reps: 10, weight: 0 }]);
+    setShowLogModal(true);
+    setSelectedDate(null);
+  };
+
+  const addLogExercise = () => setLogExercises(prev => [...prev, { name: "", sets: 3, reps: 10, weight: 0 }]);
+  const updateLogEx = (i, field, val) => setLogExercises(prev => prev.map((ex, j) => j === i ? { ...ex, [field]: val } : ex));
+  const removeLogEx = (i) => setLogExercises(prev => prev.filter((_, j) => j !== i));
+
+  const saveLogWorkout = async () => {
+    if (!logName.trim() || logExercises.every(e => !e.name.trim())) return;
+    setLogSaving(true);
+    try {
+      const { data: workout } = await api.post("/workouts", {
+        name: logName.trim(),
+        description: `Logged for ${logDate}`,
+        performed_at: `${logDate}T12:00:00`,
+      });
+      for (const ex of logExercises.filter(e => e.name.trim())) {
+        const { data: w2 } = await api.post(`/workouts/${workout.id}/exercises`, { name: ex.name.trim() });
+        const created = [...w2.exercises].reverse().find(e => e.name === ex.name.trim());
+        if (created) {
+          for (let s = 0; s < ex.sets; s++) {
+            await api.post(`/workouts/exercises/${created.id}/sets`, { reps: ex.reps, weight: ex.weight, set_type: "normal" });
+          }
+        }
+      }
+      const r = await api.get("/workouts");
+      setWorkouts(r.data || []);
+      setShowLogModal(false);
+    } catch { /* silently fail */ } finally {
+      setLogSaving(false);
+    }
+  };
+
   const shareText = latest
     ? `Workout complete: ${latest.name}\nSets: ${latestSets}\nVolume: ${Math.round(latestVolume).toLocaleString()} kg\nStreak: ${streak.current} days`
     : "No workout completed yet.";
@@ -160,11 +230,140 @@ export default function CoachPage() {
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <div className="ios-slide-up">
         <span className="section-badge mb-3 inline-flex">Smart Coach</span>
-        <h1 className="text-5xl font-black uppercase text-white md:text-7xl" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
-          Coaching Hub
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-5xl font-black uppercase text-white md:text-7xl" style={{ fontFamily: "'Bebas Neue',sans-serif" }}>
+            Coaching Hub
+          </h1>
+          <button type="button" onClick={() => { setShowCal(!showCal); setSelectedDate(null); }}
+            className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl transition active:scale-90"
+            style={{ background: showCal ? "#ff6b00" : "rgba(255,255,255,0.08)" }}>
+            📅
+          </button>
+        </div>
         <p className="mt-1 text-sm text-white/40">Recovery, streaks, diet, weekly planning, reminders, and workout adjustments.</p>
       </div>
+
+      {/* ── CALENDAR ── */}
+      {showCal && (
+        <div className="rounded-3xl p-5 ios-slide-up" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="mb-4 flex items-center justify-between">
+            <button type="button" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-white/50 transition hover:bg-white/10">←</button>
+            <h2 className="text-lg font-black text-white">{calMonthName}</h2>
+            <button type="button" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-white/50 transition hover:bg-white/10">→</button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {["M","T","W","T","F","S","S"].map((d, i) => <div key={i} className="py-1 text-[10px] font-black text-white/25">{d}</div>)}
+            {calDays.map((day, i) => {
+              if (!day) return <div key={`e${i}`} />;
+              const dk = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+              const hasWorkout = !!workoutDates[dk];
+              const isToday = dk === dateKey(new Date());
+              const isSelected = selectedDate === dk;
+              return (
+                <div key={dk} className="relative">
+                  <button type="button" onClick={() => setSelectedDate(isSelected ? null : dk)}
+                    className="flex h-10 w-full flex-col items-center justify-center rounded-xl text-sm font-bold transition"
+                    style={{ background: isSelected ? "#ff6b00" : isToday ? "rgba(255,107,0,0.15)" : "transparent", color: isSelected ? "#000" : isToday ? "#ff6b00" : "#fff" }}>
+                    {day}
+                    {hasWorkout && <span className="absolute bottom-1 h-1 w-1 rounded-full" style={{ background: isSelected ? "#000" : "#30d158" }} />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          {/* Date action popup */}
+          {selectedDate && (
+            <div className="mt-4 rounded-2xl p-4 ios-slide-up" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="mb-3 text-xs font-black text-white/40">{new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+              {workoutDates[selectedDate] ? (
+                <div className="space-y-2">
+                  {workoutDates[selectedDate].map(w => (
+                    <button key={w.id} type="button" onClick={() => navigate(`/workouts/${w.id}`)}
+                      className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition hover:bg-white/10"
+                      style={{ background: "rgba(48,209,88,0.08)", border: "1px solid rgba(48,209,88,0.2)" }}>
+                      <div>
+                        <p className="text-sm font-black text-white">{w.name}</p>
+                        <p className="text-[11px] text-white/40">{w.exercises?.length || 0} exercises</p>
+                      </div>
+                      <span className="text-xs font-black" style={{ color: "#30d158" }}>View →</span>
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => openLogModal(selectedDate)}
+                    className="w-full rounded-xl px-4 py-3 text-sm font-black text-white/50 transition hover:bg-white/10"
+                    style={{ background: "rgba(255,255,255,0.04)" }}>+ Log another workout</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => openLogModal(selectedDate)}
+                  className="w-full rounded-xl px-4 py-3 text-sm font-black text-black transition active:scale-95"
+                  style={{ background: "linear-gradient(135deg,#ff6b00,#ff9500)" }}>📝 Log Previous Workout</button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── LOG WORKOUT FLOATING MODAL (iOS style) ── */}
+      {showLogModal && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center" onClick={() => setShowLogModal(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }} />
+          <div className="relative z-10 w-full max-w-lg rounded-t-3xl sm:rounded-3xl ios-slide-up"
+            style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "85vh", overflow: "auto" }}
+            onClick={e => e.stopPropagation()}>
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 sm:hidden"><div className="h-1 w-10 rounded-full bg-white/20" /></div>
+            <div className="p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Log workout for</p>
+                  <p className="text-lg font-black text-white">{logDate && new Date(logDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</p>
+                </div>
+                <button type="button" onClick={() => setShowLogModal(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/40 hover:bg-white/10">✕</button>
+              </div>
+              <input value={logName} onChange={e => setLogName(e.target.value)} placeholder="Workout name (e.g. Push Day)"
+                className="input-field mb-4" />
+              <p className="mb-2 text-xs font-black text-white/35">EXERCISES</p>
+              {logExercises.map((ex, i) => (
+                <div key={i} className="mb-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <div className="flex items-center gap-2">
+                    <input value={ex.name} onChange={e => updateLogEx(i, "name", e.target.value)} placeholder="Exercise name"
+                      className="input-field flex-1" style={{ padding: "10px 14px", fontSize: "13px" }} />
+                    {logExercises.length > 1 && (
+                      <button type="button" onClick={() => removeLogEx(i)} className="text-xs text-white/30 hover:text-red-400">✕</button>
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[9px] font-bold text-white/25">Sets</label>
+                      <input type="number" min={1} value={ex.sets} onChange={e => updateLogEx(i, "sets", +e.target.value)}
+                        className="input-field" style={{ padding: "8px 10px", fontSize: "13px" }} />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-white/25">Reps</label>
+                      <input type="number" min={1} value={ex.reps} onChange={e => updateLogEx(i, "reps", +e.target.value)}
+                        className="input-field" style={{ padding: "8px 10px", fontSize: "13px" }} />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-white/25">Weight (kg)</label>
+                      <input type="number" min={0} value={ex.weight} onChange={e => updateLogEx(i, "weight", +e.target.value)}
+                        className="input-field" style={{ padding: "8px 10px", fontSize: "13px" }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addLogExercise}
+                className="mb-4 w-full rounded-xl py-2.5 text-xs font-black text-white/40 transition hover:bg-white/10"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.1)" }}>+ Add exercise</button>
+              <button type="button" onClick={saveLogWorkout} disabled={logSaving || !logName.trim()}
+                className="btn-fire w-full justify-center py-4 text-base font-black disabled:opacity-50">
+                {logSaving ? "Saving..." : "Save Workout"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-4">
         <SmartCard title="Current streak" value={`${streak.current}d`} sub={`Longest streak: ${streak.longest} days`} color="#ff6b00" />
