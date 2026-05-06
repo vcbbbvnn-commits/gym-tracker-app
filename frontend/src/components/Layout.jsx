@@ -3,23 +3,26 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
+// Mobile bottom bar — 6 key tabs (emoji icons + short labels)
 const MOBILE_LINKS = [
-  { to: "/", label: "Home", icon: "H" },
-  { to: "/sessions", label: "Sessions", icon: "S" },
-  { to: "/ai", label: "AI Coach", icon: "AI" },
-  { to: "/progress", label: "Progress", icon: "P" },
-  { to: "/strength", label: "Score", icon: "100" },
+  { to: "/",          label: "Home",     icon: "⚡" },
+  { to: "/sessions",  label: "Sessions", icon: "🏋️" },
+  { to: "/ai",        label: "AI",       icon: "🤖" },
+  { to: "/coach",     label: "Coach",    icon: "🧠" },
+  { to: "/progress",  label: "Progress", icon: "📈" },
+  { to: "/strength",  label: "Score",    icon: "💯" },
 ];
 
+// Desktop top nav — all pages
 const DESKTOP_LINKS = [
-  { to: "/", label: "Home", icon: "H" },
-  { to: "/sessions", label: "Sessions", icon: "S" },
-  { to: "/templates", label: "Programs", icon: "T" },
-  { to: "/exercises", label: "Exercises", icon: "E" },
-  { to: "/ai", label: "AI Coach", icon: "AI" },
-  { to: "/coach", label: "Coach", icon: "C" },
-  { to: "/strength", label: "Score", icon: "100" },
-  { to: "/progress", label: "Progress", icon: "P" },
+  { to: "/",          label: "Home",      icon: "⚡"  },
+  { to: "/sessions",  label: "Sessions",  icon: "🏋️" },
+  { to: "/templates", label: "Programs",  icon: "📋"  },
+  { to: "/exercises", label: "Exercises", icon: "🗂️" },
+  { to: "/ai",        label: "AI Coach",  icon: "🤖"  },
+  { to: "/coach",     label: "Coach",     icon: "🧠"  },
+  { to: "/strength",  label: "Score",     icon: "💯"  },
+  { to: "/progress",  label: "Progress",  icon: "📈"  },
 ];
 
 const GOALS = [
