@@ -77,6 +77,108 @@ function calcNutrition(profile) {
   };
 }
 
+// Muscle groups mapped from workout/exercise names
+const MUSCLE_KEYWORDS = {
+  chest:     ["chest","bench","fly","push","incline press","decline press","dip"],
+  back:      ["back","row","pull","deadlift","lat","pulldown","cable row"],
+  shoulders: ["shoulder","overhead","press","lateral raise","front raise","face pull","delt"],
+  legs:      ["leg","squat","lunge","calf","hamstring","quad","leg press","leg curl","romanian"],
+  biceps:    ["bicep","curl","hammer","preacher"],
+  triceps:   ["tricep","pushdown","skull","extension","kickback","dip"],
+  core:      ["core","plank","crunch","ab","mountain climber","sit-up"],
+  glutes:    ["glute","hip thrust","bridge","kickback"],
+};
+
+function getMuscleStatus(workouts) {
+  const now = Date.now();
+  const result = {};
+  for (const muscle of Object.keys(MUSCLE_KEYWORDS)) {
+    result[muscle] = { daysAgo: null, status: "none" };
+  }
+  for (const w of workouts) {
+    if (!w.created_at) continue;
+    const daysAgo = Math.floor((now - new Date(w.created_at).getTime()) / 86400000);
+    if (daysAgo > 5) continue;
+    const nameLC = (w.name || "").toLowerCase();
+    const exNames = (w.exercises || []).map(e => (e.name || "").toLowerCase());
+    const allText = [nameLC, ...exNames].join(" ");
+    for (const [muscle, keywords] of Object.entries(MUSCLE_KEYWORDS)) {
+      if (keywords.some(kw => allText.includes(kw))) {
+        if (result[muscle].daysAgo === null || daysAgo < result[muscle].daysAgo) {
+          result[muscle].daysAgo = daysAgo;
+        }
+      }
+    }
+  }
+  for (const muscle of Object.keys(result)) {
+    const d = result[muscle].daysAgo;
+    if (d === null)      result[muscle].status = "none";
+    else if (d <= 1)     result[muscle].status = "fatigued";
+    else if (d <= 2)     result[muscle].status = "recovering";
+    else                 result[muscle].status = "ready";
+  }
+  return result;
+}
+
+const STATUS_CONFIG = {
+  fatigued:   { color: "#ff375f", label: "Fatigued",   bg: "rgba(255,55,95,0.15)",  border: "rgba(255,55,95,0.3)" },
+  recovering: { color: "#ff9500", label: "Recovering", bg: "rgba(255,149,0,0.15)",  border: "rgba(255,149,0,0.3)" },
+  ready:      { color: "#30d158", label: "Recovered",  bg: "rgba(48,209,88,0.15)",  border: "rgba(48,209,88,0.3)" },
+  none:       { color: "#3a3a3c", label: "Not trained", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.06)" },
+};
+
+function MuscleHeatmap({ workouts }) {
+  const muscles = useMemo(() => getMuscleStatus(workouts), [workouts]);
+  const muscleOrder = ["chest","back","shoulders","biceps","triceps","legs","core","glutes"];
+  const labels = { chest:"Chest", back:"Back", shoulders:"Shoulders", biceps:"Biceps", triceps:"Triceps", legs:"Legs", core:"Core", glutes:"Glutes" };
+
+  return (
+    <div className="rounded-3xl p-5 ios-slide-up" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Muscle recovery</p>
+          <h2 className="text-xl font-black text-white">Fatigue Heatmap</h2>
+        </div>
+        <div className="flex items-center gap-3">
+          {Object.entries(STATUS_CONFIG).filter(([k])=>k!=="none").map(([key, cfg]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
+              <span className="text-[9px] font-bold text-white/30">{cfg.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {muscleOrder.map(muscle => {
+          const s = muscles[muscle];
+          const cfg = STATUS_CONFIG[s.status];
+          return (
+            <div key={muscle} className="rounded-2xl p-3 text-center transition hover:scale-[1.02]"
+              style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+                style={{ background: `${cfg.color}20` }}>
+                {muscle === "chest" ? "🫁" : muscle === "back" ? "🔙" : muscle === "shoulders" ? "🤷" :
+                 muscle === "biceps" ? "💪" : muscle === "triceps" ? "🔱" : muscle === "legs" ? "🦵" :
+                 muscle === "core" ? "🎯" : "🍑"}
+              </div>
+              <p className="text-xs font-black text-white">{labels[muscle]}</p>
+              <p className="mt-0.5 text-[10px] font-bold" style={{ color: cfg.color }}>
+                {s.daysAgo !== null ? (s.daysAgo === 0 ? "Today" : `${s.daysAgo}d ago`) : "—"}
+              </p>
+              <div className="mx-auto mt-2 h-1 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="h-full rounded-full" style={{
+                  width: s.status === "fatigued" ? "90%" : s.status === "recovering" ? "55%" : s.status === "ready" ? "20%" : "0%",
+                  background: cfg.color, transition: "width 0.5s ease",
+                }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SmartCard({ title, value, sub, color = "#ff6b00" }) {
   return (
     <div className="rounded-2xl p-4" style={{ background: "#1c1c1e", border: `1px solid ${color}25` }}>
@@ -371,6 +473,9 @@ export default function CoachPage() {
         <SmartCard title="This week" value={workoutsThisWeek.length} sub={`${setsThisWeek} sets logged this week`} color="#0a84ff" />
         <SmartCard title="Body target" value={latestWeight ? `${latestWeight}kg` : "--"} sub={targetWeight ? `Goal: ${targetWeight}kg` : "Set goal in AI Coach"} color="#30d158" />
       </div>
+
+      {/* ── MUSCLE FATIGUE HEATMAP ── */}
+      <MuscleHeatmap workouts={workouts} />
 
       <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-3xl p-5" style={{ background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.08)" }}>

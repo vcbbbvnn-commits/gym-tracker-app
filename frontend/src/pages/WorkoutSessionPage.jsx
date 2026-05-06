@@ -49,35 +49,61 @@ const MUSCLE_IMAGES = {
   TRAINING:"https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=300&q=75&fit=crop",
 };
 
-/* ─── Rest Timer ─────────────────────────────────── */
+/* ─── Floating iOS Rest Timer (circular ring) ──── */
 function RestTimer({ seconds, onDone, onSkip }) {
   const [remaining, setRemaining] = useState(seconds);
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const progress = remaining / seconds;
+  const dashOffset = circumference * (1 - progress);
+
   useEffect(() => {
-    if (remaining <= 0) { onDone(); return; }
+    if (remaining <= 0) {
+      // Vibrate on completion if supported
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      onDone();
+      return;
+    }
     const t = setTimeout(() => setRemaining(r => r - 1), 1000);
     return () => clearTimeout(t);
   }, [remaining]);
-  const pct = ((seconds - remaining) / seconds) * 100;
+
+  const urgentColor = remaining <= 5 ? "#ff375f" : remaining <= 15 ? "#ff9500" : "#0a84ff";
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+
   return (
-    <div className="rest-timer mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">⏱️</span>
-          <div>
-            <p className="text-xs font-black uppercase tracking-wider" style={{color:"#0a84ff"}}>Rest Timer</p>
-            <p className="text-xs" style={{color:"rgba(255,255,255,0.4)"}}>Next set in…</p>
+    <div className="fixed bottom-24 left-1/2 z-[150] -translate-x-1/2 ios-slide-up"
+      style={{ filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.6))" }}>
+      <div className="flex items-center gap-4 rounded-3xl px-5 py-4"
+        style={{ background: "rgba(28,28,30,0.95)", backdropFilter: "blur(40px) saturate(180%)", border: "1px solid rgba(255,255,255,0.1)" }}>
+        {/* Circular ring */}
+        <div className="relative flex-shrink-0" style={{ width: 76, height: 76 }}>
+          <svg width="76" height="76" className="ring-svg" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="38" cy="38" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+            <circle cx="38" cy="38" r={radius} fill="none" stroke={urgentColor} strokeWidth="5"
+              strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset}
+              style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s ease" }} />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xl font-black tabular-nums text-white">
+              {mins > 0 ? `${mins}:${String(secs).padStart(2,"0")}` : secs}
+            </span>
+            <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: urgentColor }}>
+              {remaining <= 5 ? "GO!" : "REST"}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-black tabular-nums" style={{color:"#0a84ff"}}>{remaining}s</span>
+        {/* Info + skip */}
+        <div>
+          <p className="text-xs font-black text-white">Rest Timer</p>
+          <p className="text-[10px] text-white/35 mt-0.5">Next set in {remaining}s</p>
           <button type="button" onClick={onSkip}
-            className="rounded-xl px-3 py-1.5 text-xs font-bold"
-            style={{background:"rgba(10,132,255,0.15)",color:"#0a84ff"}}>Skip</button>
+            className="mt-2 rounded-xl px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition active:scale-95"
+            style={{ background: `${urgentColor}20`, color: urgentColor, border: `1px solid ${urgentColor}40` }}>
+            Skip →
+          </button>
         </div>
-      </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{background:"rgba(10,132,255,0.15)"}}>
-        <div className="h-full rounded-full transition-all duration-1000"
-          style={{width:`${pct}%`,background:"#0a84ff"}} />
       </div>
     </div>
   );
